@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'screens/splash_screen.dart';
+import 'screens/consultation_expert.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +31,7 @@ class SproutlyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFFF0F4F3),
         useMaterial3: true,
       ),
-      home: const SplashScreen(),
+      home: const ConsultationPage(),
     );
   }
 }
