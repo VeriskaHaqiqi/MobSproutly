@@ -1,0 +1,1 @@
+// Misal: kategori artikel, role enum

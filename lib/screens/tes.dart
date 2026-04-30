@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../app_colors.dart';
-import 'login_screen.dart';
+import 'auth/login_screen.dart';
 
 class HelloScreen extends StatefulWidget {
   const HelloScreen({super.key});
