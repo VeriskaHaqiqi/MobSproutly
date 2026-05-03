@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../app_colors.dart';
-import 'login_screen.dart';
+import 'auth/login_screen.dart';
 
 class HelloScreen extends StatefulWidget {
   const HelloScreen({super.key});
@@ -108,8 +108,8 @@ class _HelloScreenState extends State<HelloScreen>
 
               // Badge
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.25),
                   borderRadius: BorderRadius.circular(20),
@@ -131,14 +131,13 @@ class _HelloScreenState extends State<HelloScreen>
 
               TextButton(
                 onPressed: () => Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(
-                      builder: (_) => const LoginScreen()),
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
                   (route) => false,
                 ),
                 style: TextButton.styleFrom(
                   backgroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 40, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16)),
                 ),

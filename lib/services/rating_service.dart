@@ -1,0 +1,1 @@
+// Kirim rating, lihat daftar rating

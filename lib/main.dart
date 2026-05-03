@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'screens/consultation_expert.dart';
+import 'screens/auth/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
