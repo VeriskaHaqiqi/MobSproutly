@@ -8,17 +8,23 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
   google_fonts: ^6.1.0
-   # State management (pilih satu)
+
+  # State management
   provider: ^6.0.0
+
   # HTTP Client
   dio: ^5.4.0
+
   # Secure Storage untuk token JWT/Sanctum
   flutter_secure_storage: ^9.0.0
-  # Lain-lain (jika perlu)
+
+  # Lain-lain
   image_picker: ^1.0.0
   file_picker: ^8.0.0
-  # Form validasi (jika mau)
+
+  # Form validasi
   form_field_validator: ^1.1.0
 
 dev_dependencies:
@@ -27,7 +33,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
   assets:
-    - assets/images/logo_splash.png
-    - assets/images/logo_login.png
-    - assets/images/logo_forgot.png
+    - assets/
