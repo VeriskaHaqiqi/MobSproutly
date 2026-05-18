@@ -554,7 +554,7 @@ class UserSettingScreenState extends State<UserSettingScreen> {
     final List<Map<String, dynamic>> items = [
       {
         'label': 'Home',
-        'icon': 'assets/images/dashboard.png',
+        'icon': 'assets/images/home.png',
         'fallback': Icons.home_outlined,
       },
       {

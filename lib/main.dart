@@ -45,7 +45,7 @@ class SproutlyApp extends StatelessWidget {
       ),
 
       // Sebelumnya:
-      // home: const SplashScreen(),
+      //home: const SplashScreen(),
 
       home: const HomeUserScreen(),
     );
