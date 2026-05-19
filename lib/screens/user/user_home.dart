@@ -60,62 +60,40 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
   }
 
   void _goToSearchConsultation() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const UserPencarianScreen(),
-      ),
-    );
+    Navigator.push(context,
+        MaterialPageRoute(builder: (_) => const UserPencarianScreen()));
   }
 
   void _goToArticles() {
     Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const UserArtikelScreen(),
-      ),
-    );
+        context, MaterialPageRoute(builder: (_) => const UserArtikelScreen()));
   }
 
   void _goToConsultations() {
     Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const UserConsultScreen(),
-      ),
-    );
+        context, MaterialPageRoute(builder: (_) => const UserConsultScreen()));
   }
 
   void _goToAccount() {
     Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const UserSettingScreen(),
-      ),
-    );
+        context, MaterialPageRoute(builder: (_) => const UserSettingScreen()));
   }
 
   void _goToArticleDetail(ArticleItem article) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => UserDetailArtikelScreen(article: article),
-      ),
-    ).then((_) {
-      setState(() {});
-    });
+          builder: (_) => UserDetailArtikelScreen(article: article)),
+    ).then((_) => setState(() {}));
   }
 
   void _onBottomNavTapped(int index) {
     if (index == 0) return;
-
-    if (index == 1) {
+    if (index == 1)
       _goToArticles();
-    } else if (index == 2) {
+    else if (index == 2)
       _goToConsultations();
-    } else if (index == 3) {
-      _goToAccount();
-    }
+    else if (index == 3) _goToAccount();
   }
 
   @override
@@ -148,6 +126,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
     );
   }
 
+  // ── Header (tanpa notifikasi) ─────────────────────────────────────────────
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
@@ -162,43 +141,24 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
         bottom: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 22),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Hello',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: Colors.white.withOpacity(0.88),
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Sarah Johnson',
-                    style: GoogleFonts.inter(
-                      fontSize: 22,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.25),
-                  shape: BoxShape.circle,
+              Text(
+                'Hello',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: Colors.white.withOpacity(0.88),
+                  fontWeight: FontWeight.w400,
                 ),
-                child: const Icon(
-                  Icons.notifications_outlined,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Sarah Johnson',
+                style: GoogleFonts.inter(
+                  fontSize: 22,
                   color: Colors.white,
-                  size: 22,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
@@ -208,6 +168,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
     );
   }
 
+  // ── Consultation Banner ───────────────────────────────────────────────────
   Widget _buildConsultationBanner() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -252,19 +213,14 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
                       foregroundColor: Colors.white,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
+                          horizontal: 20, vertical: 10),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
+                          borderRadius: BorderRadius.circular(30)),
                     ),
                     child: Text(
                       'Start Consultation',
                       style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+                          fontSize: 13, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],
@@ -279,11 +235,8 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
                 borderRadius: BorderRadius.circular(22),
               ),
               child: const Center(
-                child: Icon(
-                  Icons.local_florist_rounded,
-                  color: kHomeDark,
-                  size: 52,
-                ),
+                child: Icon(Icons.local_florist_rounded,
+                    color: kHomeDark, size: 52),
               ),
             ),
           ],
@@ -292,6 +245,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
     );
   }
 
+  // ── Articles Section ──────────────────────────────────────────────────────
   Widget _buildArticlesSection() {
     final articles = _recommendedArticles;
 
@@ -306,24 +260,20 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
               Text(
                 'Recommended Articles',
                 style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
-                ),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87),
               ),
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: _goToArticles,
                 child: Padding(
                   padding: const EdgeInsets.all(6),
-                  child: Text(
-                    'See All',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: kHomeBlue,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: Text('See All',
+                      style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: kHomeBlue,
+                          fontWeight: FontWeight.w600)),
                 ),
               ),
             ],
@@ -337,9 +287,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
             padding: const EdgeInsets.only(left: 20, right: 6),
             itemCount: articles.length,
             physics: const BouncingScrollPhysics(),
-            itemBuilder: (context, index) {
-              return _buildArticleCard(articles[index]);
-            },
+            itemBuilder: (context, index) => _buildArticleCard(articles[index]),
           ),
         ),
       ],
@@ -358,10 +306,9 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.07),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
+                color: Colors.black.withOpacity(0.07),
+                blurRadius: 10,
+                offset: const Offset(0, 3)),
           ],
         ),
         child: Column(
@@ -374,58 +321,40 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      article.category,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: Colors.grey.shade500,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    Text(article.category,
+                        style: GoogleFonts.inter(
+                            fontSize: 11,
+                            color: Colors.grey.shade500,
+                            fontWeight: FontWeight.w500)),
                     const SizedBox(height: 4),
                     Expanded(
-                      child: Text(
-                        article.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black87,
-                          height: 1.3,
-                        ),
-                      ),
+                      child: Text(article.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black87,
+                              height: 1.3)),
                     ),
                     const SizedBox(height: 6),
                     Row(
                       children: [
                         Flexible(
-                          child: Text(
-                            article.author,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              color: Colors.grey.shade500,
-                            ),
-                          ),
+                          child: Text(article.author,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.inter(
+                                  fontSize: 11, color: Colors.grey.shade500)),
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: Text(
-                            '•',
+                          child: Text('•',
+                              style: GoogleFonts.inter(
+                                  color: Colors.grey.shade400, fontSize: 11)),
+                        ),
+                        Text(article.time,
                             style: GoogleFonts.inter(
-                              color: Colors.grey.shade400,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          article.time,
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            color: Colors.grey.shade400,
-                          ),
-                        ),
+                                fontSize: 11, color: Colors.grey.shade400)),
                       ],
                     ),
                   ],
@@ -452,9 +381,8 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
             if (loadingProgress == null) return child;
             return _articleFallback(article.category, true);
           },
-          errorBuilder: (_, __, ___) {
-            return _articleFallback(article.category, false);
-          },
+          errorBuilder: (_, __, ___) =>
+              _articleFallback(article.category, false),
         ),
       ),
     );
@@ -477,24 +405,18 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
         children: [
           Align(
             alignment: Alignment.topRight,
-            child: Icon(
-              Icons.local_florist_outlined,
-              color: Colors.white.withOpacity(0.85),
-              size: 34,
-            ),
+            child: Icon(Icons.local_florist_outlined,
+                color: Colors.white.withOpacity(0.85), size: 34),
           ),
           Align(
             alignment: Alignment.bottomLeft,
-            child: Text(
-              category,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-              ),
-            ),
+            child: Text(category,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white)),
           ),
           if (isLoading)
             const Center(
@@ -502,9 +424,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
                 width: 22,
                 height: 22,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
+                    strokeWidth: 2, color: Colors.white),
               ),
             ),
         ],
@@ -512,25 +432,21 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
     );
   }
 
+  // ── Recent Activity ───────────────────────────────────────────────────────
   Widget _buildRecentActivity() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Recent Activity',
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-            ),
-          ),
+          child: Text('Recent Activity',
+              style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87)),
         ),
         const SizedBox(height: 14),
-        ..._homeActivities.map((activity) {
-          return _buildActivityItem(activity);
-        }),
+        ..._homeActivities.map((activity) => _buildActivityItem(activity)),
       ],
     );
   }
@@ -544,10 +460,9 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2)),
         ],
       ),
       child: Row(
@@ -560,11 +475,8 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
               shape: BoxShape.circle,
             ),
             child: Center(
-              child: Icon(
-                activity['icon'] as IconData,
-                color: Colors.black54,
-                size: 22,
-              ),
+              child: Icon(activity['icon'] as IconData,
+                  color: Colors.black54, size: 22),
             ),
           ),
           const SizedBox(width: 14),
@@ -572,30 +484,19 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  activity['title'] as String,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black87,
-                  ),
-                ),
+                Text(activity['title'] as String,
+                    style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black87)),
                 const SizedBox(height: 3),
-                Text(
-                  activity['subtitle'] as String,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: Colors.grey.shade500,
-                  ),
-                ),
+                Text(activity['subtitle'] as String,
+                    style: GoogleFonts.inter(
+                        fontSize: 12, color: Colors.grey.shade500)),
                 const SizedBox(height: 3),
-                Text(
-                  activity['time'] as String,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: Colors.grey.shade400,
-                  ),
-                ),
+                Text(activity['time'] as String,
+                    style: GoogleFonts.inter(
+                        fontSize: 11, color: Colors.grey.shade400)),
               ],
             ),
           ),
@@ -604,27 +505,28 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
     );
   }
 
+  // ── Bottom Nav ────────────────────────────────────────────────────────────
   Widget _buildBottomNavBar() {
     final List<Map<String, dynamic>> items = [
       {
         'label': 'Home',
         'icon': 'assets/images/home.png',
-        'fallback': Icons.home_outlined,
+        'fallback': Icons.home_outlined
       },
       {
         'label': 'Articles',
         'icon': 'assets/images/article.png',
-        'fallback': Icons.article_outlined,
+        'fallback': Icons.article_outlined
       },
       {
         'label': 'Consultations',
         'icon': 'assets/images/consultation.png',
-        'fallback': Icons.chat_bubble_outline,
+        'fallback': Icons.chat_bubble_outline
       },
       {
         'label': 'Account',
         'icon': 'assets/images/user.png',
-        'fallback': Icons.person_outline,
+        'fallback': Icons.person_outline
       },
     ];
 
@@ -633,10 +535,9 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
-          ),
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 16,
+              offset: const Offset(0, -4)),
         ],
       ),
       child: SafeArea(
@@ -646,15 +547,12 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: List.generate(items.length, (index) {
               final bool isSelected = index == 0;
-
               return GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () => _onBottomNavTapped(index),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -664,25 +562,22 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
                         height: 24,
                         fit: BoxFit.contain,
                         color: isSelected ? kHomeBlue : Colors.grey.shade400,
-                        errorBuilder: (_, __, ___) {
-                          return Icon(
+                        errorBuilder: (_, __, ___) => Icon(
                             items[index]['fallback'] as IconData,
                             color:
                                 isSelected ? kHomeBlue : Colors.grey.shade400,
-                            size: 24,
-                          );
-                        },
+                            size: 24),
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        items[index]['label'] as String,
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.w400,
-                          color: isSelected ? kHomeBlue : Colors.grey.shade400,
-                        ),
-                      ),
+                      Text(items[index]['label'] as String,
+                          style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                              color: isSelected
+                                  ? kHomeBlue
+                                  : Colors.grey.shade400)),
                     ],
                   ),
                 ),

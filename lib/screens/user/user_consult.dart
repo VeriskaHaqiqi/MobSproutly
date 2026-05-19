@@ -187,7 +187,7 @@ class _UserConsultScreenState extends State<UserConsultScreen> {
     switch (index) {
       case 0:
         Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => const HomeUserScreen()));
+            context, MaterialPageRoute(builder: (_) => HomeUserScreen()));
         break;
       case 1:
         Navigator.pushReplacement(context,

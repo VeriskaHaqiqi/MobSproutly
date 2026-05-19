@@ -33,7 +33,7 @@ class UserChatLockedScreenState extends State<UserChatLockedScreen> {
     switch (index) {
       case 0:
         Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (c) => const HomeUserScreen()));
+            context, MaterialPageRoute(builder: (c) => HomeUserScreen()));
         break;
       case 1:
         Navigator.pushReplacement(context,
@@ -342,11 +342,12 @@ class UserChatLockedScreenState extends State<UserChatLockedScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '\$${(widget.expert.pricePerSession / 1000 * 1.5).toStringAsFixed(2)}',
+                      'Rp ${(widget.expert.pricePerSession / 1000).toStringAsFixed(0)}K',
                       style: GoogleFonts.outfit(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.black87),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.black87,
+                      ),
                     ),
                     Text('Valid for 7 days',
                         style: GoogleFonts.outfit(

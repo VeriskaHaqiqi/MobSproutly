@@ -258,7 +258,7 @@ class UserChatScreenState extends State<UserChatScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) {
         return DraggableScrollableSheet(
-          initialChildSize: 0.78,
+          initialChildSize: 0.65,
           maxChildSize: 0.9,
           minChildSize: 0.45,
           builder: (ctx, scrollController) {
@@ -312,10 +312,7 @@ class UserChatScreenState extends State<UserChatScreen> {
                       ],
                     ),
                   ),
-                  Divider(
-                    color: Colors.grey.shade200,
-                    height: 1,
-                  ),
+                  Divider(color: Colors.grey.shade200, height: 1),
                   Expanded(
                     child: SingleChildScrollView(
                       controller: scrollController,
@@ -350,8 +347,6 @@ class UserChatScreenState extends State<UserChatScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 14),
-                          _buildSimpleReviewsCard(),
                         ],
                       ),
                     ),
@@ -369,6 +364,7 @@ class UserChatScreenState extends State<UserChatScreen> {
     final consult = widget.consult;
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -389,61 +385,48 @@ class UserChatScreenState extends State<UserChatScreen> {
             children: [
               Stack(
                 children: [
-                  Container(
-                    width: 70,
-                    height: 70,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: kChatTeal,
-                        width: 2.5,
-                      ),
-                    ),
-                    child: ClipOval(
-                      child: Image.network(
-                        consult.avatarUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (ctx, e, s) {
-                          return Container(
-                            color: kChatTeal.withOpacity(0.2),
-                            child: Center(
-                              child: Text(
-                                consult.expertName[0],
-                                style: GoogleFonts.outfit(
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.w700,
-                                  color: kChatMain,
-                                ),
+                  ClipOval(
+                    child: Image.network(
+                      consult.avatarUrl,
+                      width: 70,
+                      height: 70,
+                      fit: BoxFit.cover,
+                      errorBuilder: (ctx, e, s) {
+                        return Container(
+                          width: 70,
+                          height: 70,
+                          color: kChatTeal.withOpacity(0.2),
+                          child: Center(
+                            child: Text(
+                              consult.expertName[0],
+                              style: GoogleFonts.outfit(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w700,
+                                color: kChatMain,
                               ),
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      },
                     ),
                   ),
-                  Positioned(
-                    bottom: 2,
-                    right: 2,
-                    child: Container(
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: consult.isOnline
-                            ? const Color(0xFF4CAF50)
-                            : Colors.grey,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 2,
+                  if (consult.isOnline)
+                    Positioned(
+                      bottom: 2,
+                      right: 2,
+                      child: Container(
+                        width: 18,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4CAF50),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 2,
+                          ),
                         ),
                       ),
-                      child: const Icon(
-                        Icons.check,
-                        color: Colors.white,
-                        size: 11,
-                      ),
                     ),
-                  ),
                 ],
               ),
               const SizedBox(width: 14),
@@ -459,16 +442,16 @@ class UserChatScreenState extends State<UserChatScreen> {
                         color: Colors.black87,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 3),
                     Text(
                       consult.specialty,
                       style: GoogleFonts.outfit(
-                        fontSize: 12,
+                        fontSize: 13,
                         color: kChatMain,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         const Icon(
@@ -476,7 +459,7 @@ class UserChatScreenState extends State<UserChatScreen> {
                           color: Color(0xFFFFBB00),
                           size: 15,
                         ),
-                        const SizedBox(width: 3),
+                        const SizedBox(width: 4),
                         Text(
                           '4.9',
                           style: GoogleFonts.outfit(
@@ -486,27 +469,16 @@ class UserChatScreenState extends State<UserChatScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: kChatTeal.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            '8 years',
-                            style: GoogleFonts.outfit(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: kChatMain,
-                            ),
+                        Text(
+                          '8 years exp',
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            color: Colors.grey.shade500,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Text(
                       consult.isOnline ? 'Available now' : 'Currently offline',
                       style: GoogleFonts.outfit(
@@ -522,86 +494,57 @@ class UserChatScreenState extends State<UserChatScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           Divider(color: Colors.grey.shade100),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Icon(
-                Icons.school_outlined,
-                size: 16,
-                color: Colors.grey.shade500,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Certified plant care specialist with experience in ${consult.specialty.toLowerCase()}.',
-                  style: GoogleFonts.outfit(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 12),
-          Divider(color: Colors.grey.shade100),
-          const SizedBox(height: 10),
-          Text(
-            'Plant Specializations',
-            style: GoogleFonts.outfit(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 6,
-            children: consult.topics.take(6).map((topic) {
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: kChatTeal.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: kChatTeal.withOpacity(0.4),
-                    width: 1,
-                  ),
-                ),
-                child: Text(
-                  topic,
-                  style: GoogleFonts.outfit(
-                    fontSize: 11,
-                    color: kChatMain,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 12),
-          Divider(color: Colors.grey.shade100),
-          const SizedBox(height: 10),
           Text(
             'About',
             style: GoogleFonts.outfit(
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
               color: Colors.black87,
             ),
           ),
           const SizedBox(height: 6),
           Text(
-            '${consult.expertName} helps users diagnose plant problems, understand proper care routines, and improve plant health through practical consultation.',
+            '${consult.expertName} helps users diagnose plant problems, understand plant care routines, and provide practical recommendations based on the consultation details.',
             style: GoogleFonts.outfit(
               fontSize: 12,
               color: Colors.grey.shade600,
               height: 1.6,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Divider(color: Colors.grey.shade100),
+          const SizedBox(height: 12),
+          Text(
+            'Specialization',
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 6,
+            ),
+            decoration: BoxDecoration(
+              color: kChatTeal.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: kChatTeal.withOpacity(0.4),
+              ),
+            ),
+            child: Text(
+              consult.specialty,
+              style: GoogleFonts.outfit(
+                fontSize: 12,
+                color: kChatMain,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -617,10 +560,7 @@ class UserChatScreenState extends State<UserChatScreen> {
   ) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          vertical: 14,
-          horizontal: 10,
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
         decoration: BoxDecoration(
           color: color.withOpacity(0.25),
           borderRadius: BorderRadius.circular(14),
@@ -659,111 +599,6 @@ class UserChatScreenState extends State<UserChatScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildSimpleReviewsCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Recent Reviews',
-            style: GoogleFonts.outfit(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildReviewItem(
-            name: 'Amanda',
-            comment:
-                'Very helpful explanation. My plant started recovering after following the advice.',
-          ),
-          Divider(color: Colors.grey.shade100, height: 20),
-          _buildReviewItem(
-            name: 'Kevin',
-            comment:
-                'Clear and practical guidance. The expert explained the issue in a simple way.',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildReviewItem({
-    required String name,
-    required String comment,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CircleAvatar(
-          radius: 18,
-          backgroundColor: kChatTeal.withOpacity(0.2),
-          child: Text(
-            name[0],
-            style: GoogleFonts.outfit(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: kChatMain,
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    name,
-                    style: GoogleFonts.outfit(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Row(
-                    children: List.generate(
-                      5,
-                      (index) => const Icon(
-                        Icons.star_rounded,
-                        color: Color(0xFFFFBB00),
-                        size: 13,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 3),
-              Text(
-                comment,
-                style: GoogleFonts.outfit(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 

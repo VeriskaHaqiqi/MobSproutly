@@ -402,7 +402,7 @@ class UserRiwayatRatingScreenState extends State<UserRiwayatRatingScreen> {
     switch (index) {
       case 0:
         Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (c) => const HomeUserScreen()));
+            context, MaterialPageRoute(builder: (c) => HomeUserScreen()));
         break;
       case 1:
         Navigator.pushReplacement(context,

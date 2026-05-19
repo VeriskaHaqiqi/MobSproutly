@@ -106,8 +106,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Center(
                   child: Image.asset(
                     'assets/images/logo.png',
-                    width: 35,
-                    height: 35,
+                    width: 44,
+                    height: 44,
                     fit: BoxFit.contain,
                     color: Colors.white,
                     errorBuilder: (_, __, ___) => const Icon(
@@ -183,63 +183,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 text: 'Log In',
                 onPressed: _handleLogin,
               ),
-              const SizedBox(height: 20),
-
-              // ── Divider ──
-              Row(
-                children: [
-                  const Expanded(child: Divider(color: AppColors.borderColor)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(
-                      'or continue with',
-                      style: GoogleFonts.outfit(
-                        fontSize: 13,
-                        color: AppColors.textGrey,
-                      ),
-                    ),
-                  ),
-                  const Expanded(child: Divider(color: AppColors.borderColor)),
-                ],
-              ),
-              const SizedBox(height: 14),
-
-              // ── Google Button ──
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: _handleLogin,
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    side: const BorderSide(
-                        color: AppColors.borderColor, width: 1.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    backgroundColor: AppColors.white,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Google "G" logo dengan warna resmi
-                      SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CustomPaint(painter: _GoogleGPainter()),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'Continue with Google',
-                        style: GoogleFonts.outfit(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
               const SizedBox(height: 28),
 
               // ── Register Link ──
@@ -274,55 +217,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-}
-
-// ─── Google "G" CustomPainter ─────────────────────────────────────────────────
-// Warna resmi: Biru #4285F4 · Merah #EA4335 · Kuning #FBBC05 · Hijau #34A853
-class _GoogleGPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-    final r = size.width / 2;
-    final sw = size.width * 0.22;
-    final hs = sw / 2;
-
-    final p = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = sw
-      ..strokeCap = StrokeCap.butt;
-
-    // Merah — kiri atas
-    p.color = const Color(0xFFEA4335);
-    canvas.drawArc(Rect.fromCircle(center: Offset(cx, cy), radius: r - hs),
-        _r(225), _r(45), false, p);
-
-    // Kuning — bawah
-    p.color = const Color(0xFFFBBC05);
-    canvas.drawArc(Rect.fromCircle(center: Offset(cx, cy), radius: r - hs),
-        _r(270), _r(90), false, p);
-
-    // Hijau — kanan bawah
-    p.color = const Color(0xFF34A853);
-    canvas.drawArc(Rect.fromCircle(center: Offset(cx, cy), radius: r - hs),
-        _r(0), _r(90), false, p);
-
-    // Biru — kanan atas ke kiri
-    p.color = const Color(0xFF4285F4);
-    canvas.drawArc(Rect.fromCircle(center: Offset(cx, cy), radius: r - hs),
-        _r(90), _r(135), false, p);
-
-    // Bar horizontal biru
-    canvas.drawRect(
-      Rect.fromLTRB(cx, cy - hs / 2, size.width, cy + hs / 2),
-      Paint()
-        ..color = const Color(0xFF4285F4)
-        ..style = PaintingStyle.fill,
-    );
-  }
-
-  double _r(double deg) => deg * 3.14159265358979 / 180;
-
-  @override
-  bool shouldRepaint(covariant CustomPainter _) => false;
 }

@@ -39,156 +39,95 @@ class ArticleItem {
 // Ornamental Plants | Vegetables & Food Crops | Fruit Plants | Herbs & Spices
 
 final List<ArticleItem> allArticles = [
-  // ── Ornamental Plants ──────────────────────────────────────────────────────
   ArticleItem(
     id: '1',
-    category: 'Ornamental Plants',
+    category: 'Indoor Plants',
     title: 'Complete Guide to Growing Monstera Deliciosa Indoors',
     author: 'Sarah Johnson',
     time: '2 days ago',
     imageUrl:
-        'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=600&q=80',
+        'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80',
   ),
-  ArticleItem(
-    id: '5',
-    category: 'Ornamental Plants',
-    title: 'Top 10 Low-Maintenance Indoor Plants for Busy People',
-    author: 'Lisa Thompson',
-    time: '2 weeks ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1463936575829-25148e1db1b8?w=600&q=80',
-  ),
-  ArticleItem(
-    id: '9',
-    category: 'Ornamental Plants',
-    title: 'Orchid Care 101: Keep Your Orchids Blooming Year-Round',
-    author: 'Dr. Sarah Lee',
-    time: '1 month ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1490750967868-88df5691cc5e?w=600&q=80',
-  ),
-  ArticleItem(
-    id: '14',
-    category: 'Ornamental Plants',
-    title: 'Calathea & Aglaonema: Colourful Leaves for Any Room',
-    author: 'Dr. Emily Chen',
-    time: '3 weeks ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1637165982884-8fa7f73b0a43?w=600&q=80',
-  ),
-
-  // ── Vegetables & Food Crops ────────────────────────────────────────────────
   ArticleItem(
     id: '2',
-    category: 'Vegetables & Food Crops',
+    category: 'Hydroponics',
     title: "Beginner's Guide to Hydroponic Lettuce Farming",
     author: 'Michael Chen',
     time: '5 days ago',
     imageUrl:
-        'https://images.unsplash.com/photo-1558449028-b53a39d100fc?w=600&q=80',
+        'https://images.unsplash.com/photo-1558449028-b53a39d100fc?auto=format&fit=crop&w=800&q=80',
+  ),
+  ArticleItem(
+    id: '3',
+    category: 'Pest Control',
+    title: 'Natural Ways to Control Aphids Without Chemicals',
+    author: 'Emma Rodriguez',
+    time: '1 week ago',
+    imageUrl:
+        'https://images.unsplash.com/photo-1591857177580-dc82b9ac4e1e?auto=format&fit=crop&w=800&q=80',
   ),
   ArticleItem(
     id: '4',
-    category: 'Vegetables & Food Crops',
+    category: 'Outdoor Plants',
     title: 'Planning Your First Vegetable Garden: A Step-by-Step Guide',
     author: 'David Park',
     time: '1 week ago',
     imageUrl:
-        'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&q=80',
+        'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=800&q=80',
+  ),
+  ArticleItem(
+    id: '5',
+    category: 'Indoor Plants',
+    title: 'Top 10 Low-Maintenance Indoor Plants for Busy People',
+    author: 'Lisa Thompson',
+    time: '2 weeks ago',
+    imageUrl:
+        'https://images.unsplash.com/photo-1463320726281-696a485928c7?auto=format&fit=crop&w=800&q=80',
   ),
   ArticleItem(
     id: '6',
-    category: 'Vegetables & Food Crops',
+    category: 'Outdoor Plants',
     title: 'Growing Tomatoes: From Seed to Harvest',
     author: 'James Wilson',
     time: '2 weeks ago',
     imageUrl:
-        'https://images.unsplash.com/photo-1592841200221-a6898f307baa?w=600&q=80',
+        'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=800&q=80',
   ),
-  ArticleItem(
-    id: '11',
-    category: 'Vegetables & Food Crops',
-    title: 'Natural Ways to Control Pests on Vegetable Plants',
-    author: 'Emma Rodriguez',
-    time: '1 week ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1591857177580-dc82b9ac4e1e?w=600&q=80',
-  ),
-  ArticleItem(
-    id: '15',
-    category: 'Vegetables & Food Crops',
-    title: 'Growing Chili, Eggplant & Cucumber in Polybags',
-    author: 'Mark Thompson',
-    time: '1 month ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1592312040456-b66e0e40faef?w=600&q=80',
-  ),
-
-  // ── Fruit Plants ───────────────────────────────────────────────────────────
-  ArticleItem(
-    id: '8',
-    category: 'Fruit Plants',
-    title: 'Container Fruit Trees: Growing Citrus & Berries at Home',
-    author: 'Dr. Mark Lee',
-    time: '3 weeks ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1560493676-04071c5f467b?w=600&q=80',
-  ),
-  ArticleItem(
-    id: '12',
-    category: 'Fruit Plants',
-    title: 'Tabulampot Mango: Growing Mango Trees in Pots',
-    author: 'Kevin Lim',
-    time: '1 month ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1536532184021-da5392b55da1?w=600&q=80',
-  ),
-  ArticleItem(
-    id: '16',
-    category: 'Fruit Plants',
-    title: 'Strawberry at Home: Planting Tips for Pots & Planters',
-    author: 'Dr. Aisha Patel',
-    time: '5 weeks ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=600&q=80',
-  ),
-
-  // ── Herbs & Spices ─────────────────────────────────────────────────────────
   ArticleItem(
     id: '7',
-    category: 'Herbs & Spices',
+    category: 'Herbal Plants',
     title: 'How to Grow Basil, Rosemary & Mint at Home',
     author: 'Dr. Emily Chen',
     time: '3 weeks ago',
     imageUrl:
-        'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=600&q=80',
+        'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=800&q=80',
+  ),
+  ArticleItem(
+    id: '8',
+    category: 'Fruit Plants',
+    title: 'Tabulampot: Growing Fruit Trees in Containers',
+    author: 'Dr. Mark Lee',
+    time: '3 weeks ago',
+    imageUrl:
+        'https://images.unsplash.com/photo-1560493676-04071c5f467b?auto=format&fit=crop&w=800&q=80',
+  ),
+  ArticleItem(
+    id: '9',
+    category: 'Indoor Plants',
+    title: 'Orchid Care 101: Keep Your Orchids Blooming Year-Round',
+    author: 'Dr. Sarah Lee',
+    time: '1 month ago',
+    imageUrl:
+        'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=800&q=80',
   ),
   ArticleItem(
     id: '10',
-    category: 'Herbs & Spices',
-    title: 'Growing Ginger & Turmeric in Your Home Garden',
-    author: 'Dr. Priya Sharma',
+    category: 'Plant Health',
+    title: 'Identifying Common Plant Diseases & How to Treat Them',
+    author: 'Dr. James Wilson',
     time: '1 month ago',
     imageUrl:
-        'https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=600&q=80',
-  ),
-  ArticleItem(
-    id: '13',
-    category: 'Herbs & Spices',
-    title: 'Aloe Vera: The Multipurpose Plant Every Home Needs',
-    author: 'Dr. Priya Sharma',
-    time: '5 weeks ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?w=600&q=80',
-  ),
-  ArticleItem(
-    id: '17',
-    category: 'Herbs & Spices',
-    title: 'Lemongrass & Pandan: Easy Tropical Herbs to Grow',
-    author: 'Marcus Thompson',
-    time: '6 weeks ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1600850056064-a8b380df8395?w=600&q=80',
+        'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=800&q=80',
   ),
 ];
 

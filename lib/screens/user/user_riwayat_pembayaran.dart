@@ -1,9 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+
 import 'user_home.dart';
 import 'user_artikel.dart';
 import 'user_consult.dart';
@@ -12,10 +15,8 @@ import 'user_setting.dart';
 const Color kPayHistTeal = Color(0xFF76EAD0);
 const Color kPayHistBlue = Color(0xFF76D7EA);
 const Color kPayHistMain = Color(0xFF5DCFCF);
-const Color kPayHistLGreen = Color(0xFFD0FF99);
 const Color kPayHistScaffold = Color(0xFFE8F5F3);
 
-// ─── Payment Item Model ───────────────────────────────────────────────────────
 enum PaymentStatus { paid, cancelled, refunded }
 
 class PaymentItem {
@@ -30,7 +31,7 @@ class PaymentItem {
   final String date;
   final String invoiceNumber;
   final PaymentStatus status;
-  final String? cancelReason; // only for cancelled/refunded
+  final String? cancelReason;
 
   const PaymentItem({
     required this.id,
@@ -50,7 +51,6 @@ class PaymentItem {
   double get total => amount + platformFee;
 }
 
-// ─── Dummy Data ───────────────────────────────────────────────────────────────
 final List<PaymentItem> allPayments = [
   PaymentItem(
     id: '1',
@@ -60,8 +60,8 @@ final List<PaymentItem> allPayments = [
         'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=150&q=80',
     topic: 'Nitrogen Analysis',
     consultType: 'Video Consultation',
-    amount: 82.00,
-    platformFee: 3.00,
+    amount: 82000,
+    platformFee: 2500,
     date: 'Dec 15, 2024',
     invoiceNumber: 'INV-2024-001',
   ),
@@ -73,8 +73,8 @@ final List<PaymentItem> allPayments = [
         'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80',
     topic: 'Plant Rotation Plan',
     consultType: 'Chat Consultation',
-    amount: 62.00,
-    platformFee: 3.00,
+    amount: 62000,
+    platformFee: 2500,
     date: 'Dec 12, 2024',
     invoiceNumber: 'INV-2024-002',
   ),
@@ -86,8 +86,8 @@ final List<PaymentItem> allPayments = [
         'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80',
     topic: 'Pest Strategy',
     consultType: 'Video Consultation',
-    amount: 117.00,
-    platformFee: 3.00,
+    amount: 117000,
+    platformFee: 2500,
     date: 'Dec 8, 2024',
     invoiceNumber: 'INV-2024-003',
   ),
@@ -99,8 +99,8 @@ final List<PaymentItem> allPayments = [
         'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&q=80',
     topic: 'Irrigation Audit',
     consultType: 'Video Consultation',
-    amount: 92.00,
-    platformFee: 3.00,
+    amount: 92000,
+    platformFee: 2500,
     date: 'Dec 5, 2024',
     invoiceNumber: 'INV-2024-004',
   ),
@@ -112,8 +112,8 @@ final List<PaymentItem> allPayments = [
         'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&q=80',
     topic: 'Nutrient Deficiency Analysis',
     consultType: 'Chat Consultation',
-    amount: 72.00,
-    platformFee: 3.00,
+    amount: 72000,
+    platformFee: 2500,
     date: 'Nov 28, 2024',
     invoiceNumber: 'INV-2024-005',
   ),
@@ -125,8 +125,8 @@ final List<PaymentItem> allPayments = [
         'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=150&q=80',
     topic: 'Orchid Root Care',
     consultType: 'Chat Consultation',
-    amount: 42.00,
-    platformFee: 3.00,
+    amount: 42000,
+    platformFee: 2500,
     date: 'Nov 20, 2024',
     invoiceNumber: 'INV-2024-006',
   ),
@@ -138,8 +138,8 @@ final List<PaymentItem> allPayments = [
         'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&q=80',
     topic: 'Tabulampot Mango Care',
     consultType: 'Video Consultation',
-    amount: 52.00,
-    platformFee: 3.00,
+    amount: 52000,
+    platformFee: 2500,
     date: 'Nov 15, 2024',
     invoiceNumber: 'INV-2024-007',
   ),
@@ -151,8 +151,8 @@ final List<PaymentItem> allPayments = [
         'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=150&q=80',
     topic: 'Herb Garden Setup',
     consultType: 'Chat Consultation',
-    amount: 45.00,
-    platformFee: 3.00,
+    amount: 45000,
+    platformFee: 2500,
     date: 'Nov 10, 2024',
     invoiceNumber: 'INV-2024-008',
   ),
@@ -164,8 +164,8 @@ final List<PaymentItem> allPayments = [
         'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&q=80',
     topic: 'Corn Crop Analysis',
     consultType: 'Video Consultation',
-    amount: 70.00,
-    platformFee: 3.00,
+    amount: 70000,
+    platformFee: 2500,
     date: 'Nov 5, 2024',
     invoiceNumber: 'INV-2024-009',
     status: PaymentStatus.cancelled,
@@ -180,8 +180,8 @@ final List<PaymentItem> allPayments = [
         'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&q=80',
     topic: 'Dragon Fruit Growth',
     consultType: 'Chat Consultation',
-    amount: 38.00,
-    platformFee: 3.00,
+    amount: 38000,
+    platformFee: 2500,
     date: 'Oct 28, 2024',
     invoiceNumber: 'INV-2024-010',
     status: PaymentStatus.refunded,
@@ -196,8 +196,8 @@ final List<PaymentItem> allPayments = [
         'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80',
     topic: 'Organic Pest Treatment',
     consultType: 'Video Consultation',
-    amount: 90.00,
-    platformFee: 3.00,
+    amount: 90000,
+    platformFee: 2500,
     date: 'Oct 20, 2024',
     invoiceNumber: 'INV-2024-011',
     status: PaymentStatus.cancelled,
@@ -206,16 +206,46 @@ final List<PaymentItem> allPayments = [
   ),
 ];
 
-// ─── PDF Invoice Generator ────────────────────────────────────────────────────
+String formatRupiah(double value) {
+  final number = value.round().toString();
+  final result = number.replaceAllMapped(
+    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+    (match) => '${match[1]}.',
+  );
+
+  return 'Rp $result';
+}
+
+String statusLabel(PaymentStatus status) {
+  switch (status) {
+    case PaymentStatus.paid:
+      return 'PAID';
+    case PaymentStatus.cancelled:
+      return 'CANCELLED';
+    case PaymentStatus.refunded:
+      return 'REFUNDED';
+  }
+}
+
+PdfColor statusPdfColor(PaymentStatus status) {
+  switch (status) {
+    case PaymentStatus.paid:
+      return PdfColor.fromHex('10B981');
+    case PaymentStatus.cancelled:
+      return PdfColors.redAccent;
+    case PaymentStatus.refunded:
+      return PdfColors.orange;
+  }
+}
+
 Future<Uint8List> generateInvoicePdf(PaymentItem payment) async {
   final doc = pw.Document();
 
-  // Warna
   final tealColor = PdfColor.fromHex('5DCFCF');
   final tealLight = PdfColor.fromHex('E8F5F3');
   final greyColor = PdfColor.fromHex('6B7280');
   final darkColor = PdfColor.fromHex('1F2937');
-  final greenColor = PdfColor.fromHex('10B981');
+  final currentStatusColor = statusPdfColor(payment.status);
 
   doc.addPage(
     pw.Page(
@@ -225,7 +255,6 @@ Future<Uint8List> generateInvoicePdf(PaymentItem payment) async {
         return pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            // ── Header ──
             pw.Container(
               width: double.infinity,
               padding: const pw.EdgeInsets.all(24),
@@ -239,37 +268,49 @@ Future<Uint8List> generateInvoicePdf(PaymentItem payment) async {
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text('SPROUTLY',
-                          style: pw.TextStyle(
-                              fontSize: 24,
-                              fontWeight: pw.FontWeight.bold,
-                              color: PdfColors.white)),
+                      pw.Text(
+                        'SPROUTLY',
+                        style: pw.TextStyle(
+                          fontSize: 24,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.white,
+                        ),
+                      ),
                       pw.SizedBox(height: 4),
-                      pw.Text('Plant Care & Expert Consultation',
-                          style: pw.TextStyle(
-                              fontSize: 10, color: PdfColors.white)),
+                      pw.Text(
+                        'Plant Care & Expert Consultation',
+                        style: const pw.TextStyle(
+                          fontSize: 10,
+                          color: PdfColors.white,
+                        ),
+                      ),
                     ],
                   ),
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.end,
                     children: [
-                      pw.Text('INVOICE',
-                          style: pw.TextStyle(
-                              fontSize: 20,
-                              fontWeight: pw.FontWeight.bold,
-                              color: PdfColors.white)),
+                      pw.Text(
+                        'INVOICE',
+                        style: pw.TextStyle(
+                          fontSize: 20,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.white,
+                        ),
+                      ),
                       pw.SizedBox(height: 4),
-                      pw.Text(payment.invoiceNumber,
-                          style: pw.TextStyle(
-                              fontSize: 12, color: PdfColors.white)),
+                      pw.Text(
+                        payment.invoiceNumber,
+                        style: const pw.TextStyle(
+                          fontSize: 12,
+                          color: PdfColors.white,
+                        ),
+                      ),
                     ],
                   ),
                 ],
               ),
             ),
             pw.SizedBox(height: 24),
-
-            // ── Billed To + Date ──
             pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
@@ -277,19 +318,30 @@ Future<Uint8List> generateInvoicePdf(PaymentItem payment) async {
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text('BILLED TO',
-                          style: pw.TextStyle(
-                              fontSize: 10,
-                              fontWeight: pw.FontWeight.bold,
-                              color: greyColor)),
+                      pw.Text(
+                        'BILLED TO',
+                        style: pw.TextStyle(
+                          fontSize: 10,
+                          fontWeight: pw.FontWeight.bold,
+                          color: greyColor,
+                        ),
+                      ),
                       pw.SizedBox(height: 6),
-                      pw.Text('Sarah Johnson',
-                          style: pw.TextStyle(
-                              fontSize: 14,
-                              fontWeight: pw.FontWeight.bold,
-                              color: darkColor)),
-                      pw.Text('sarah.johnson@gmail.com',
-                          style: pw.TextStyle(fontSize: 10, color: greyColor)),
+                      pw.Text(
+                        'Sarah Johnson',
+                        style: pw.TextStyle(
+                          fontSize: 14,
+                          fontWeight: pw.FontWeight.bold,
+                          color: darkColor,
+                        ),
+                      ),
+                      pw.Text(
+                        'sarah.johnson@gmail.com',
+                        style: pw.TextStyle(
+                          fontSize: 10,
+                          color: greyColor,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -297,33 +349,49 @@ Future<Uint8List> generateInvoicePdf(PaymentItem payment) async {
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.end,
                     children: [
-                      pw.Text('INVOICE DATE',
-                          style: pw.TextStyle(
-                              fontSize: 10,
-                              fontWeight: pw.FontWeight.bold,
-                              color: greyColor)),
+                      pw.Text(
+                        'INVOICE DATE',
+                        style: pw.TextStyle(
+                          fontSize: 10,
+                          fontWeight: pw.FontWeight.bold,
+                          color: greyColor,
+                        ),
+                      ),
                       pw.SizedBox(height: 6),
-                      pw.Text(payment.date,
-                          style: pw.TextStyle(fontSize: 12, color: darkColor)),
+                      pw.Text(
+                        payment.date,
+                        style: pw.TextStyle(
+                          fontSize: 12,
+                          color: darkColor,
+                        ),
+                      ),
                       pw.SizedBox(height: 8),
-                      pw.Text('STATUS',
-                          style: pw.TextStyle(
-                              fontSize: 10,
-                              fontWeight: pw.FontWeight.bold,
-                              color: greyColor)),
+                      pw.Text(
+                        'STATUS',
+                        style: pw.TextStyle(
+                          fontSize: 10,
+                          fontWeight: pw.FontWeight.bold,
+                          color: greyColor,
+                        ),
+                      ),
                       pw.SizedBox(height: 4),
                       pw.Container(
                         padding: const pw.EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 4),
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
                         decoration: pw.BoxDecoration(
-                          color: greenColor,
+                          color: currentStatusColor,
                           borderRadius: pw.BorderRadius.circular(20),
                         ),
-                        child: pw.Text('PAID',
-                            style: pw.TextStyle(
-                                fontSize: 10,
-                                fontWeight: pw.FontWeight.bold,
-                                color: PdfColors.white)),
+                        child: pw.Text(
+                          statusLabel(payment.status),
+                          style: pw.TextStyle(
+                            fontSize: 10,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.white,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -331,8 +399,6 @@ Future<Uint8List> generateInvoicePdf(PaymentItem payment) async {
               ],
             ),
             pw.SizedBox(height: 28),
-
-            // ── Expert Info ──
             pw.Container(
               width: double.infinity,
               padding: const pw.EdgeInsets.all(16),
@@ -344,11 +410,14 @@ Future<Uint8List> generateInvoicePdf(PaymentItem payment) async {
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  pw.Text('EXPERT INFORMATION',
-                      style: pw.TextStyle(
-                          fontSize: 10,
-                          fontWeight: pw.FontWeight.bold,
-                          color: greyColor)),
+                  pw.Text(
+                    'EXPERT INFORMATION',
+                    style: pw.TextStyle(
+                      fontSize: 10,
+                      fontWeight: pw.FontWeight.bold,
+                      color: greyColor,
+                    ),
+                  ),
                   pw.SizedBox(height: 8),
                   pw.Row(
                     children: [
@@ -356,26 +425,31 @@ Future<Uint8List> generateInvoicePdf(PaymentItem payment) async {
                         child: pw.Column(
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
-                            pw.Text(payment.expertName,
-                                style: pw.TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: pw.FontWeight.bold,
-                                    color: darkColor)),
-                            pw.Text(payment.specialty,
-                                style: pw.TextStyle(
-                                    fontSize: 10, color: tealColor)),
+                            pw.Text(
+                              payment.expertName,
+                              style: pw.TextStyle(
+                                fontSize: 13,
+                                fontWeight: pw.FontWeight.bold,
+                                color: darkColor,
+                              ),
+                            ),
+                            pw.Text(
+                              payment.specialty,
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                                color: tealColor,
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.end,
-                        children: [
-                          pw.Text(payment.consultType,
-                              style: pw.TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: pw.FontWeight.bold,
-                                  color: darkColor)),
-                        ],
+                      pw.Text(
+                        payment.consultType,
+                        style: pw.TextStyle(
+                          fontSize: 10,
+                          fontWeight: pw.FontWeight.bold,
+                          color: darkColor,
+                        ),
                       ),
                     ],
                   ),
@@ -383,53 +457,66 @@ Future<Uint8List> generateInvoicePdf(PaymentItem payment) async {
               ),
             ),
             pw.SizedBox(height: 24),
-
-            // ── Service Table ──
-            pw.Text('SERVICE DETAILS',
-                style: pw.TextStyle(
-                    fontSize: 10,
-                    fontWeight: pw.FontWeight.bold,
-                    color: greyColor)),
+            pw.Text(
+              'SERVICE DETAILS',
+              style: pw.TextStyle(
+                fontSize: 10,
+                fontWeight: pw.FontWeight.bold,
+                color: greyColor,
+              ),
+            ),
             pw.SizedBox(height: 8),
-
-            // Table header
             pw.Container(
-              padding:
-                  const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const pw.EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
               decoration: pw.BoxDecoration(color: tealColor),
               child: pw.Row(
                 children: [
                   pw.Expanded(
-                      flex: 4,
-                      child: pw.Text('Description',
-                          style: pw.TextStyle(
-                              fontSize: 10,
-                              fontWeight: pw.FontWeight.bold,
-                              color: PdfColors.white))),
+                    flex: 4,
+                    child: pw.Text(
+                      'Description',
+                      style: pw.TextStyle(
+                        fontSize: 10,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.white,
+                      ),
+                    ),
+                  ),
                   pw.Expanded(
-                      flex: 2,
-                      child: pw.Text('Type',
-                          style: pw.TextStyle(
-                              fontSize: 10,
-                              fontWeight: pw.FontWeight.bold,
-                              color: PdfColors.white),
-                          textAlign: pw.TextAlign.center)),
+                    flex: 2,
+                    child: pw.Text(
+                      'Type',
+                      textAlign: pw.TextAlign.center,
+                      style: pw.TextStyle(
+                        fontSize: 10,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.white,
+                      ),
+                    ),
+                  ),
                   pw.Expanded(
-                      flex: 2,
-                      child: pw.Text('Amount',
-                          style: pw.TextStyle(
-                              fontSize: 10,
-                              fontWeight: pw.FontWeight.bold,
-                              color: PdfColors.white),
-                          textAlign: pw.TextAlign.right)),
+                    flex: 2,
+                    child: pw.Text(
+                      'Amount',
+                      textAlign: pw.TextAlign.right,
+                      style: pw.TextStyle(
+                        fontSize: 10,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.white,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-
-            // Row 1 — Consultation
             pw.Container(
-              padding:
-                  const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const pw.EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
               decoration: pw.BoxDecoration(
                 border: pw.Border(
                   bottom: pw.BorderSide(color: tealLight, width: 1),
@@ -438,38 +525,58 @@ Future<Uint8List> generateInvoicePdf(PaymentItem payment) async {
               child: pw.Row(
                 children: [
                   pw.Expanded(
-                      flex: 4,
-                      child: pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                          pw.Text(payment.topic,
-                              style: pw.TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: pw.FontWeight.bold,
-                                  color: darkColor)),
-                          pw.Text('Consultation with ${payment.expertName}',
-                              style:
-                                  pw.TextStyle(fontSize: 9, color: greyColor)),
-                        ],
-                      )),
+                    flex: 4,
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(
+                          payment.topic,
+                          style: pw.TextStyle(
+                            fontSize: 11,
+                            fontWeight: pw.FontWeight.bold,
+                            color: darkColor,
+                          ),
+                        ),
+                        pw.Text(
+                          'Consultation with ${payment.expertName}',
+                          style: pw.TextStyle(
+                            fontSize: 9,
+                            color: greyColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   pw.Expanded(
-                      flex: 2,
-                      child: pw.Text(payment.consultType.split(' ').first,
-                          style: pw.TextStyle(fontSize: 10, color: greyColor),
-                          textAlign: pw.TextAlign.center)),
+                    flex: 2,
+                    child: pw.Text(
+                      payment.consultType.split(' ').first,
+                      textAlign: pw.TextAlign.center,
+                      style: pw.TextStyle(
+                        fontSize: 10,
+                        color: greyColor,
+                      ),
+                    ),
+                  ),
                   pw.Expanded(
-                      flex: 2,
-                      child: pw.Text('\$${payment.amount.toStringAsFixed(2)}',
-                          style: pw.TextStyle(fontSize: 11, color: darkColor),
-                          textAlign: pw.TextAlign.right)),
+                    flex: 2,
+                    child: pw.Text(
+                      formatRupiah(payment.amount),
+                      textAlign: pw.TextAlign.right,
+                      style: pw.TextStyle(
+                        fontSize: 11,
+                        color: darkColor,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-
-            // Row 2 — Platform fee
             pw.Container(
-              padding:
-                  const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const pw.EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
               decoration: pw.BoxDecoration(
                 color: tealLight,
                 border: pw.Border(
@@ -479,26 +586,41 @@ Future<Uint8List> generateInvoicePdf(PaymentItem payment) async {
               child: pw.Row(
                 children: [
                   pw.Expanded(
-                      flex: 4,
-                      child: pw.Text('Platform Service Fee',
-                          style: pw.TextStyle(fontSize: 10, color: greyColor))),
+                    flex: 4,
+                    child: pw.Text(
+                      'Platform Service Fee',
+                      style: pw.TextStyle(
+                        fontSize: 10,
+                        color: greyColor,
+                      ),
+                    ),
+                  ),
                   pw.Expanded(
-                      flex: 2,
-                      child: pw.Text('-',
-                          style: pw.TextStyle(fontSize: 10, color: greyColor),
-                          textAlign: pw.TextAlign.center)),
+                    flex: 2,
+                    child: pw.Text(
+                      '-',
+                      textAlign: pw.TextAlign.center,
+                      style: pw.TextStyle(
+                        fontSize: 10,
+                        color: greyColor,
+                      ),
+                    ),
+                  ),
                   pw.Expanded(
-                      flex: 2,
-                      child: pw.Text(
-                          '\$${payment.platformFee.toStringAsFixed(2)}',
-                          style: pw.TextStyle(fontSize: 10, color: greyColor),
-                          textAlign: pw.TextAlign.right)),
+                    flex: 2,
+                    child: pw.Text(
+                      formatRupiah(payment.platformFee),
+                      textAlign: pw.TextAlign.right,
+                      style: pw.TextStyle(
+                        fontSize: 10,
+                        color: greyColor,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
             pw.SizedBox(height: 12),
-
-            // Total
             pw.Container(
               padding: const pw.EdgeInsets.all(16),
               decoration: pw.BoxDecoration(
@@ -508,37 +630,55 @@ Future<Uint8List> generateInvoicePdf(PaymentItem payment) async {
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text('TOTAL PAYMENT',
-                      style: pw.TextStyle(
-                          fontSize: 12,
-                          fontWeight: pw.FontWeight.bold,
-                          color: PdfColors.white)),
-                  pw.Text('\$${payment.total.toStringAsFixed(2)}',
-                      style: pw.TextStyle(
-                          fontSize: 18,
-                          fontWeight: pw.FontWeight.bold,
-                          color: PdfColors.white)),
+                  pw.Text(
+                    'TOTAL PAYMENT',
+                    style: pw.TextStyle(
+                      fontSize: 12,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.white,
+                    ),
+                  ),
+                  pw.Text(
+                    formatRupiah(payment.total),
+                    style: pw.TextStyle(
+                      fontSize: 18,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.white,
+                    ),
+                  ),
                 ],
               ),
             ),
             pw.SizedBox(height: 32),
-
-            // ── Footer ──
             pw.Divider(color: tealLight),
             pw.SizedBox(height: 12),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                pw.Text('Sproutly — Plant Care & Expert Consultation',
-                    style: pw.TextStyle(fontSize: 9, color: greyColor)),
-                pw.Text('support@sproutly.app',
-                    style: pw.TextStyle(fontSize: 9, color: greyColor)),
+                pw.Text(
+                  'Sproutly — Plant Care & Expert Consultation',
+                  style: pw.TextStyle(
+                    fontSize: 9,
+                    color: greyColor,
+                  ),
+                ),
+                pw.Text(
+                  'support@sproutly.app',
+                  style: pw.TextStyle(
+                    fontSize: 9,
+                    color: greyColor,
+                  ),
+                ),
               ],
             ),
             pw.SizedBox(height: 4),
             pw.Text(
-                'This invoice was automatically generated. For questions, contact our support team.',
-                style: pw.TextStyle(fontSize: 8, color: greyColor)),
+              'This invoice was automatically generated. For questions, contact our support team.',
+              style: pw.TextStyle(
+                fontSize: 8,
+                color: greyColor,
+              ),
+            ),
           ],
         );
       },
@@ -548,7 +688,6 @@ Future<Uint8List> generateInvoicePdf(PaymentItem payment) async {
   return doc.save();
 }
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
 class UserRiwayatPembayaranScreen extends StatefulWidget {
   const UserRiwayatPembayaranScreen({super.key});
 
@@ -562,27 +701,37 @@ class UserRiwayatPembayaranScreenState
   int navIndex = 3;
   int displayCount = 5;
   final Set<String> loadingInvoices = {};
-  PaymentStatus? filterStatus; // null = All
+  PaymentStatus? filterStatus;
 
   void onNavTapped(int index) {
     if (index == navIndex) return;
+
     setState(() => navIndex = index);
+
     switch (index) {
       case 0:
         Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (c) => const HomeUserScreen()));
+          context,
+          MaterialPageRoute(builder: (c) => const HomeUserScreen()),
+        );
         break;
       case 1:
-        Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (c) => const UserArtikelScreen()));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (c) => const UserArtikelScreen()),
+        );
         break;
       case 2:
-        Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (c) => const UserConsultScreen()));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (c) => const UserConsultScreen()),
+        );
         break;
       case 3:
-        Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (c) => const UserSettingScreen()));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (c) => const UserSettingScreen()),
+        );
         break;
     }
   }
@@ -594,29 +743,34 @@ class UserRiwayatPembayaranScreenState
 
   Future<void> downloadInvoice(PaymentItem payment) async {
     setState(() => loadingInvoices.add(payment.id));
+
     try {
       final pdfData = await generateInvoicePdf(payment);
 
-      // Buka PDF share/print sheet menggunakan printing package
       await Printing.sharePdf(
         bytes: pdfData,
         filename: '${payment.invoiceNumber}.pdf',
       );
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to generate invoice. Please try again.',
-                style: GoogleFonts.outfit(fontSize: 13)),
+            content: Text(
+              'Failed to generate invoice. Please try again.',
+              style: GoogleFonts.outfit(fontSize: 13),
+            ),
             backgroundColor: Colors.redAccent,
             behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
     } finally {
-      if (mounted) setState(() => loadingInvoices.remove(payment.id));
+      if (mounted) {
+        setState(() => loadingInvoices.remove(payment.id));
+      }
     }
   }
 
@@ -637,7 +791,6 @@ class UserRiwayatPembayaranScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Filter chips
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
@@ -715,7 +868,6 @@ class UserRiwayatPembayaranScreenState
     );
   }
 
-  // ── Header ────────────────────────────────────────────────────────────────
   Widget buildHeader() {
     return Container(
       decoration: const BoxDecoration(
@@ -740,16 +892,22 @@ class UserRiwayatPembayaranScreenState
                     color: Colors.white.withOpacity(0.25),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white, size: 16),
+                  child: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
-              Text('Payment History',
-                  style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white)),
+              Text(
+                'Payment History',
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
             ],
           ),
         ),
@@ -757,7 +915,6 @@ class UserRiwayatPembayaranScreenState
     );
   }
 
-  // ── Payment Card ──────────────────────────────────────────────────────────
   Widget buildFilterChip({
     required String label,
     required int count,
@@ -770,7 +927,10 @@ class UserRiwayatPembayaranScreenState
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 8,
+        ),
         decoration: BoxDecoration(
           color: isActive ? color : Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -781,22 +941,30 @@ class UserRiwayatPembayaranScreenState
           boxShadow: isActive
               ? [
                   BoxShadow(
-                      color: color.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3))
+                    color: color.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
                 ]
               : [],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: isActive ? Colors.white : color, size: 14),
+            Icon(
+              icon,
+              color: isActive ? Colors.white : color,
+              size: 14,
+            ),
             const SizedBox(width: 6),
-            Text('$count $label',
-                style: GoogleFonts.outfit(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: isActive ? Colors.white : color)),
+            Text(
+              '$count $label',
+              style: GoogleFonts.outfit(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isActive ? Colors.white : color,
+              ),
+            ),
           ],
         ),
       ),
@@ -809,19 +977,26 @@ class UserRiwayatPembayaranScreenState
         : filterStatus == PaymentStatus.cancelled
             ? 'No cancelled payments'
             : 'No refunded payments';
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 40),
       child: Center(
         child: Column(
           children: [
-            Icon(Icons.receipt_long_outlined,
-                size: 52, color: Colors.grey.shade300),
+            Icon(
+              Icons.receipt_long_outlined,
+              size: 52,
+              color: Colors.grey.shade300,
+            ),
             const SizedBox(height: 12),
-            Text(label,
-                style: GoogleFonts.outfit(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade400)),
+            Text(
+              label,
+              style: GoogleFonts.outfit(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade400,
+              ),
+            ),
           ],
         ),
       ),
@@ -832,16 +1007,14 @@ class UserRiwayatPembayaranScreenState
     final isLoading = loadingInvoices.contains(payment.id);
     final isPaid = payment.status == PaymentStatus.paid;
     final isCancelled = payment.status == PaymentStatus.cancelled;
-    final isRefunded = payment.status == PaymentStatus.refunded;
 
-    // Status colors
     final Color statusColor = isPaid
         ? const Color(0xFF10B981)
         : isCancelled
             ? Colors.redAccent
             : Colors.orange;
 
-    final String statusLabel = isPaid
+    final String currentStatusLabel = isPaid
         ? 'Paid'
         : isCancelled
             ? 'Cancelled'
@@ -860,14 +1033,17 @@ class UserRiwayatPembayaranScreenState
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 3)),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
         ],
-        // Subtle left border for non-paid
         border: !isPaid
             ? Border(
-                left: BorderSide(color: statusColor.withOpacity(0.6), width: 4),
+                left: BorderSide(
+                  color: statusColor.withOpacity(0.6),
+                  width: 4,
+                ),
               )
             : null,
       ),
@@ -876,11 +1052,9 @@ class UserRiwayatPembayaranScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Expert row ──
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Avatar (greyed out if cancelled/refunded)
                 Opacity(
                   opacity: isPaid ? 1.0 : 0.55,
                   child: ClipOval(
@@ -891,61 +1065,78 @@ class UserRiwayatPembayaranScreenState
                       fit: BoxFit.cover,
                       loadingBuilder: (ctx, child, p) {
                         if (p == null) return child;
+
                         return Container(
                           width: 50,
                           height: 50,
                           color: kPayHistTeal.withOpacity(0.2),
                           child: const Center(
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: kPayHistMain),
+                              strokeWidth: 2,
+                              color: kPayHistMain,
+                            ),
                           ),
                         );
                       },
-                      errorBuilder: (ctx, e, s) => Container(
-                        width: 50,
-                        height: 50,
-                        color: kPayHistTeal.withOpacity(0.2),
-                        child: Center(
-                          child: Text(payment.expertName[0],
+                      errorBuilder: (ctx, e, s) {
+                        return Container(
+                          width: 50,
+                          height: 50,
+                          color: kPayHistTeal.withOpacity(0.2),
+                          child: Center(
+                            child: Text(
+                              payment.expertName[0],
                               style: GoogleFonts.outfit(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: kPayHistMain)),
-                        ),
-                      ),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: kPayHistMain,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(payment.expertName,
-                          style: GoogleFonts.outfit(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: isPaid ? Colors.black87 : Colors.black54)),
-                      Text(payment.specialty,
-                          style: GoogleFonts.outfit(
-                              fontSize: 12,
-                              color:
-                                  isPaid ? kPayHistMain : Colors.grey.shade400,
-                              fontWeight: FontWeight.w500)),
+                      Text(
+                        payment.expertName,
+                        style: GoogleFonts.outfit(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: isPaid ? Colors.black87 : Colors.black54,
+                        ),
+                      ),
+                      Text(
+                        payment.specialty,
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: isPaid ? kPayHistMain : Colors.grey.shade400,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(payment.topic,
-                          style: GoogleFonts.outfit(
-                              fontSize: 12,
-                              color: isPaid ? Colors.black87 : Colors.black45)),
-                      Text(payment.consultType,
-                          style: GoogleFonts.outfit(
-                              fontSize: 11, color: Colors.grey.shade400)),
+                      Text(
+                        payment.topic,
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: isPaid ? Colors.black87 : Colors.black45,
+                        ),
+                      ),
+                      Text(
+                        payment.consultType,
+                        style: GoogleFonts.outfit(
+                          fontSize: 11,
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-
-                // Download button — only for paid
                 if (isPaid)
                   GestureDetector(
                     onTap: isLoading ? null : () => downloadInvoice(payment),
@@ -960,14 +1151,18 @@ class UserRiwayatPembayaranScreenState
                           ? Padding(
                               padding: const EdgeInsets.all(8),
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: kPayHistMain),
+                                strokeWidth: 2,
+                                color: kPayHistMain,
+                              ),
                             )
-                          : const Icon(Icons.download_outlined,
-                              color: kPayHistMain, size: 20),
+                          : const Icon(
+                              Icons.download_outlined,
+                              color: kPayHistMain,
+                              size: 20,
+                            ),
                     ),
                   )
                 else
-                  // Status icon for cancelled/refunded
                   Container(
                     width: 36,
                     height: 36,
@@ -975,12 +1170,14 @@ class UserRiwayatPembayaranScreenState
                       color: statusColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(statusIcon, color: statusColor, size: 18),
+                    child: Icon(
+                      statusIcon,
+                      color: statusColor,
+                      size: 18,
+                    ),
                   ),
               ],
             ),
-
-            // ── Cancel reason box ── (only for non-paid)
             if (!isPaid && payment.cancelReason != null) ...[
               const SizedBox(height: 12),
               Container(
@@ -989,14 +1186,19 @@ class UserRiwayatPembayaranScreenState
                 decoration: BoxDecoration(
                   color: statusColor.withOpacity(0.06),
                   borderRadius: BorderRadius.circular(10),
-                  border:
-                      Border.all(color: statusColor.withOpacity(0.2), width: 1),
+                  border: Border.all(
+                    color: statusColor.withOpacity(0.2),
+                    width: 1,
+                  ),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.info_outline_rounded,
-                        size: 15, color: statusColor),
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: 15,
+                      color: statusColor,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -1012,12 +1214,12 @@ class UserRiwayatPembayaranScreenState
                 ),
               ),
             ],
-
             const SizedBox(height: 12),
-            Divider(color: Colors.grey.shade100, height: 1),
+            Divider(
+              color: Colors.grey.shade100,
+              height: 1,
+            ),
             const SizedBox(height: 10),
-
-            // ── Amount + date + status badge ──
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -1026,7 +1228,7 @@ class UserRiwayatPembayaranScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '\$${payment.total.toStringAsFixed(2)}',
+                        formatRupiah(payment.total),
                         style: GoogleFonts.outfit(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
@@ -1035,15 +1237,21 @@ class UserRiwayatPembayaranScreenState
                               !isPaid ? TextDecoration.lineThrough : null,
                         ),
                       ),
-                      Text(payment.date,
-                          style: GoogleFonts.outfit(
-                              fontSize: 11, color: Colors.grey.shade500)),
+                      Text(
+                        payment.date,
+                        style: GoogleFonts.outfit(
+                          fontSize: 11,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -1056,13 +1264,18 @@ class UserRiwayatPembayaranScreenState
                         height: 6,
                         margin: const EdgeInsets.only(right: 5),
                         decoration: BoxDecoration(
-                            color: statusColor, shape: BoxShape.circle),
+                          color: statusColor,
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                      Text(statusLabel,
-                          style: GoogleFonts.outfit(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: statusColor)),
+                      Text(
+                        currentStatusLabel,
+                        style: GoogleFonts.outfit(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: statusColor,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1074,7 +1287,6 @@ class UserRiwayatPembayaranScreenState
     );
   }
 
-  // ── Load More ─────────────────────────────────────────────────────────────
   Widget buildLoadMoreButton() {
     return Padding(
       padding: const EdgeInsets.only(top: 4, bottom: 8),
@@ -1088,44 +1300,47 @@ class UserRiwayatPembayaranScreenState
             borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
-                  color: kPayHistMain.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3)),
+                color: kPayHistMain.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
             ],
           ),
-          child: Text('Load More Payments',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white)),
+          child: Text(
+            'Load More Payments',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
         ),
       ),
     );
   }
 
-  // ── Bottom Nav ────────────────────────────────────────────────────────────
   Widget buildBottomNavBar() {
     final List<Map<String, dynamic>> items = [
       {
         'label': 'Home',
         'icon': 'assets/images/home.png',
-        'fallback': Icons.home_outlined
+        'fallback': Icons.home_outlined,
       },
       {
         'label': 'Articles',
         'icon': 'assets/images/article.png',
-        'fallback': Icons.article_outlined
+        'fallback': Icons.article_outlined,
       },
       {
         'label': 'Consultations',
         'icon': 'assets/images/consultation.png',
-        'fallback': Icons.chat_bubble_outline
+        'fallback': Icons.chat_bubble_outline,
       },
       {
         'label': 'Account',
         'icon': 'assets/images/user.png',
-        'fallback': Icons.person_outline
+        'fallback': Icons.person_outline,
       },
     ];
 
@@ -1134,9 +1349,10 @@ class UserRiwayatPembayaranScreenState
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 16,
-              offset: const Offset(0, -4)),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
         ],
       ),
       child: SafeArea(
@@ -1146,33 +1362,41 @@ class UserRiwayatPembayaranScreenState
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: List.generate(items.length, (index) {
               final bool isSel = navIndex == index;
+
               return GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () => onNavTapped(index),
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Image.asset(items[index]['icon'] as String,
-                          width: 24,
-                          height: 24,
-                          fit: BoxFit.contain,
-                          color: isSel ? kPayHistMain : Colors.grey.shade400,
-                          errorBuilder: (ctx, e, s) => Icon(
-                              items[index]['fallback'] as IconData,
-                              color:
-                                  isSel ? kPayHistMain : Colors.grey.shade400,
-                              size: 24)),
+                      Image.asset(
+                        items[index]['icon'] as String,
+                        width: 24,
+                        height: 24,
+                        fit: BoxFit.contain,
+                        color: isSel ? kPayHistMain : Colors.grey.shade400,
+                        errorBuilder: (ctx, e, s) {
+                          return Icon(
+                            items[index]['fallback'] as IconData,
+                            color: isSel ? kPayHistMain : Colors.grey.shade400,
+                            size: 24,
+                          );
+                        },
+                      ),
                       const SizedBox(height: 4),
-                      Text(items[index]['label'] as String,
-                          style: GoogleFonts.outfit(
-                              fontSize: 11,
-                              fontWeight:
-                                  isSel ? FontWeight.w600 : FontWeight.w400,
-                              color:
-                                  isSel ? kPayHistMain : Colors.grey.shade400)),
+                      Text(
+                        items[index]['label'] as String,
+                        style: GoogleFonts.outfit(
+                          fontSize: 11,
+                          fontWeight: isSel ? FontWeight.w600 : FontWeight.w400,
+                          color: isSel ? kPayHistMain : Colors.grey.shade400,
+                        ),
+                      ),
                     ],
                   ),
                 ),

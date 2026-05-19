@@ -31,14 +31,24 @@ class UserPembayaranScreenState extends State<UserPembayaranScreen> {
   bool isConfirming = false;
 
   // Dummy bank info
-  final String bankName = 'Chase Bank';
-  final String accountNumber = '4532 8901 2345';
+  final String bankName = 'BNI';
+  final String accountNumber = '1234 5678 9012';
   String get accountHolder =>
       widget.expert.name.replaceAll('Dr. ', '').replaceAll('Dr.', '');
 
-  double get consultationFee => widget.expert.pricePerSession / 1000 * 1.5;
-  double get platformFee => 3.00;
+  double get consultationFee => widget.expert.pricePerSession;
+  double get platformFee => 2500;
   double get totalFee => consultationFee + platformFee;
+
+  String formatRupiah(double value) {
+    final number = value.round().toString();
+    final result = number.replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (match) => '${match[1]}.',
+    );
+
+    return 'Rp $result';
+  }
 
   Future<void> pickFile() async {
     try {
@@ -897,31 +907,43 @@ class UserPembayaranScreenState extends State<UserPembayaranScreen> {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 6,
-              offset: const Offset(0, 2)),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
         children: [
           buildDetailRow(
-              'Consultation Fee', '\$${consultationFee.toStringAsFixed(2)}'),
+            'Consultation Fee',
+            formatRupiah(consultationFee),
+          ),
           Divider(color: Colors.grey.shade100, height: 20),
-          buildDetailRow('Platform Fee', '\$${platformFee.toStringAsFixed(2)}'),
+          buildDetailRow(
+            'Platform Fee',
+            formatRupiah(platformFee),
+          ),
           Divider(color: Colors.grey.shade200, height: 20),
           Row(
             children: [
-              Text('Total Payment',
-                  style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black87)),
+              Text(
+                'Total Payment',
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
+              ),
               const Spacer(),
-              Text('\$${totalFee.toStringAsFixed(2)}',
-                  style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.black87)),
+              Text(
+                formatRupiah(totalFee),
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black87,
+                ),
+              ),
             ],
           ),
         ],

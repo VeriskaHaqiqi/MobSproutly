@@ -36,7 +36,7 @@ class UserSettingScreenState extends State<UserSettingScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (ctx) => const HomeUserScreen(),
+            builder: (ctx) => HomeUserScreen(),
           ),
         );
         break;
@@ -195,11 +195,6 @@ class UserSettingScreenState extends State<UserSettingScreen> {
                       SettingMenuItem(
                         icon: Icons.receipt_long_outlined,
                         label: 'Payment History',
-                        badge: const Icon(
-                          Icons.star_rounded,
-                          color: Color(0xFFFFBB00),
-                          size: 14,
-                        ),
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -267,31 +262,16 @@ class UserSettingScreenState extends State<UserSettingScreen> {
         bottom: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 14, 20, 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Account',
-                style: GoogleFonts.outfit(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Account',
+              style: GoogleFonts.outfit(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
               ),
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.25),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.settings_outlined,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

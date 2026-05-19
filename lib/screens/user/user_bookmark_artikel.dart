@@ -92,8 +92,8 @@ class UserBookmarkArtikelScreenState extends State<UserBookmarkArtikelScreen> {
     setState(() => navIndex = index);
     switch (index) {
       case 0:
-        Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (ctx) => const HomeUserScreen()));
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (ctx) => HomeUserScreen()));
         break;
       case 1:
         Navigator.pushReplacement(context,
