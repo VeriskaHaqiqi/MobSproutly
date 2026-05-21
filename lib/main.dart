@@ -4,8 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 //import 'screens/user/user_home.dart';
 
-import 'screens/auth/splash_screen.dart';
-
+//import 'screens/auth/splash_screen.dart';
+import 'screens/expert/expert_home.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -45,13 +45,11 @@ class SproutlyApp extends StatelessWidget {
       ),
 
 
-<<<<<<< HEAD
-      home: HomeUserScreen(),
-=======
-      home: const SplashScreen(),
+      //home: HomeUserScreen(),
+      //home: const SplashScreen(),
 
       //home: const HomeUserScreen(),
->>>>>>> 0a563f0 (coba main dart)
+        home: const ExpertHomePage(),
     );
   }
 }

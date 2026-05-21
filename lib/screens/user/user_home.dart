@@ -7,7 +7,7 @@ import 'user_consult.dart';
 import 'user_setting.dart';
 import 'user_detail_artikel.dart';
 
-const Color kHomeYellow = Color(0xFFFFFF9F);
+const Color kHomeYellow = Color(0xFFFFFF9F); 
 const Color kHomeLightGreen = Color(0xFFD0FF99);
 const Color kHomeGreen = Color(0xFF99FF99);
 const Color kHomeTeal = Color(0xFF76EAD0);
