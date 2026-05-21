@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'screens/user/user_home.dart';
+//import 'screens/user/user_home.dart';
 
-//import 'screens/auth/splash_screen.dart';
+import 'screens/auth/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,10 +44,14 @@ class SproutlyApp extends StatelessWidget {
         useMaterial3: true,
       ),
 
-      // Sebelumnya:
-      //home: const SplashScreen(),
 
+<<<<<<< HEAD
       home: HomeUserScreen(),
+=======
+      home: const SplashScreen(),
+
+      //home: const HomeUserScreen(),
+>>>>>>> 0a563f0 (coba main dart)
     );
   }
 }
