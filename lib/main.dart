@@ -4,8 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 //import 'screens/user/user_home.dart';
 //import 'screens/auth/splash_screen.dart';
-//import 'screens/expert/expert_home.dart';
-import 'screens/auth/input_password_baru.dart';
+import 'screens/expert/expert_home.dart';
+//import 'screens/auth/input_password_baru.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,11 +47,8 @@ class SproutlyApp extends StatelessWidget {
 
       //home: HomeUserScreen(),
       //home: const SplashScreen(),
-
-      home: const SetNewPasswordScreen(),
-
-      //home: const HomeUserScreen(),
-      //home: const ExpertHomePage(),
+      //home: const SetNewPasswordScreen(),
+      home: const ExpertHomePage(),
     );
   }
 }
