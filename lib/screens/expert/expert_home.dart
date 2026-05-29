@@ -544,7 +544,17 @@ class ExpertHomePage extends StatelessWidget {
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => ExpertDetailArtikelPage(),
+          builder: (_) => ExpertDetailArtikelPage(
+            article: ExpertArticleItem(
+              id: article['title'] as String,
+              category: 'Ornamental Plants',
+              title: article['title'] as String,
+              author: 'Dr. Taehyun Chen',
+              time: article['date'] as String,
+              imageUrl: article['image'] as String,
+              isMine: true,
+            ),
+          ),
         ),
       ),
       child: Container(

@@ -268,13 +268,15 @@ class ExpertArticlePageState extends State<ExpertArticlePage> {
     }
   }
 
-  void goToDetailArticle() {
+  void goToDetailArticle(ExpertArticleItem article) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (ctx) => ExpertDetailArtikelPage(),
+        builder: (ctx) => ExpertDetailArtikelPage(article: article),
       ),
-    ).then((_) => setState(() {}));
+    ).then((_) => setState(() {
+          applyFilter(); // ← tambah ini
+        }));
   }
 
   @override
@@ -541,7 +543,7 @@ class ExpertArticlePageState extends State<ExpertArticlePage> {
     final isBookmarked = expertBookmarkedIds.contains(article.id);
 
     return GestureDetector(
-      onTap: goToDetailArticle,
+      onTap: () => goToDetailArticle(article),
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
