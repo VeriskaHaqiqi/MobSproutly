@@ -1,305 +1,524 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'expert_home.dart';
+import 'expert_consult.dart';
+import 'expert_setting.dart';
+import 'expert_tulis_artikel.dart';
+import 'expert_bookmark.dart';
+import 'expert_detail_artikel.dart';
+
+const Color kExArtTeal = Color(0xFF76EAD0);
+const Color kExArtBlue = Color(0xFF76D7EA);
+const Color kExArtMain = Color(0xFF5DCFCF);
+const Color kExArtLGreen = Color(0xFFD0FF99);
+const Color kExArtGreen = Color(0xFF99FF99);
+const Color kExArtYellow = Color(0xFFFFFF9F);
+const Color kExArtScaffold = Color(0xFFF0F4F3);
+
+// ─── Article Model ────────────────────────────────────────────────────────────
+class ExpertArticleItem {
+  final String id;
+  final String category;
+  final String title;
+  final String author;
+  final String time;
+  final String imageUrl;
+  final bool isMine;
+  bool isBookmarked;
+
+  ExpertArticleItem({
+    required this.id,
+    required this.category,
+    required this.title,
+    required this.author,
+    required this.time,
+    required this.imageUrl,
+    this.isMine = false,
+    this.isBookmarked = false,
+  });
+}
+
+// ─── Kategori Artikel ────────────────────────────────────────────────────────
+const List<String> expertArtikelCategories = [
+  'All',
+  'Ornamental Plants',
+  'Vegetables & Food Crops',
+  'Fruit Plants',
+  'Herbs & Spices',
+];
+
+// ─── Dummy Articles ───────────────────────────────────────────────────────────
+final List<ExpertArticleItem> allExpertArticles = [
+  ExpertArticleItem(
+    id: '1',
+    category: 'Ornamental Plants',
+    title: 'Complete Guide to Monstera Deliciosa Care',
+    author: 'Dr. Isyana Chen',
+    time: '2 days ago',
+    imageUrl:
+        'https://images.pexels.com/photos/3097770/pexels-photo-3097770.jpeg?auto=compress&cs=tinysrgb&w=900',
+    isMine: true,
+  ),
+  ExpertArticleItem(
+    id: '2',
+    category: 'Ornamental Plants',
+    title: 'Top 10 Low-Maintenance Indoor Plants for Busy People',
+    author: 'Dr. Sarah Lee',
+    time: '1 week ago',
+    imageUrl:
+        'https://images.pexels.com/photos/6208086/pexels-photo-6208086.jpeg?auto=compress&cs=tinysrgb&w=900',
+  ),
+  ExpertArticleItem(
+    id: '3',
+    category: 'Ornamental Plants',
+    title: 'Orchid Care 101: Keep Your Orchids Blooming Year-Round',
+    author: 'Dr. Isyana Chen',
+    time: '2 weeks ago',
+    imageUrl:
+        'https://images.pexels.com/photos/1400375/pexels-photo-1400375.jpeg?auto=compress&cs=tinysrgb&w=900',
+    isMine: true,
+  ),
+  ExpertArticleItem(
+    id: '4',
+    category: 'Vegetables & Food Crops',
+    title: "Beginner's Guide to Hydroponic Lettuce Farming",
+    author: 'Michael Chen',
+    time: '5 days ago',
+    imageUrl:
+        'https://images.pexels.com/photos/4505161/pexels-photo-4505161.jpeg?auto=compress&cs=tinysrgb&w=900',
+  ),
+  ExpertArticleItem(
+    id: '5',
+    category: 'Vegetables & Food Crops',
+    title: 'Growing Tomatoes: From Seed to Harvest',
+    author: 'James Wilson',
+    time: '2 weeks ago',
+    imageUrl:
+        'https://images.pexels.com/photos/1327838/pexels-photo-1327838.jpeg?auto=compress&cs=tinysrgb&w=900',
+  ),
+  ExpertArticleItem(
+    id: '6',
+    category: 'Vegetables & Food Crops',
+    title: 'Natural Ways to Control Pests on Vegetable Plants',
+    author: 'Dr. Isyana Chen',
+    time: '3 weeks ago',
+    imageUrl:
+        'https://images.pexels.com/photos/4751978/pexels-photo-4751978.jpeg?auto=compress&cs=tinysrgb&w=900',
+    isMine: true,
+  ),
+  ExpertArticleItem(
+    id: '7',
+    category: 'Fruit Plants',
+    title: 'Container Fruit Trees: Growing Citrus & Berries at Home',
+    author: 'Dr. Mark Lee',
+    time: '3 weeks ago',
+    imageUrl:
+        'https://images.pexels.com/photos/2090902/pexels-photo-2090902.jpeg?auto=compress&cs=tinysrgb&w=900',
+  ),
+  ExpertArticleItem(
+    id: '8',
+    category: 'Fruit Plants',
+    title: 'Strawberry at Home: Planting Tips for Pots & Planters',
+    author: 'Dr. Aisha Patel',
+    time: '1 month ago',
+    imageUrl:
+        'https://images.pexels.com/photos/46174/strawberries-berries-fruit-freshness-46174.jpeg?auto=compress&cs=tinysrgb&w=900',
+  ),
+  ExpertArticleItem(
+    id: '9',
+    category: 'Herbs & Spices',
+    title: 'How to Grow Basil, Rosemary & Mint at Home',
+    author: 'Dr. Isyana Chen',
+    time: '1 month ago',
+    imageUrl:
+        'https://images.pexels.com/photos/143133/pexels-photo-143133.jpeg?auto=compress&cs=tinysrgb&w=900',
+    isMine: true,
+  ),
+  ExpertArticleItem(
+    id: '10',
+    category: 'Herbs & Spices',
+    title: 'Growing Ginger & Turmeric in Your Home Garden',
+    author: 'Dr. Priya Sharma',
+    time: '5 weeks ago',
+    imageUrl:
+        'https://images.pexels.com/photos/4198021/pexels-photo-4198021.jpeg?auto=compress&cs=tinysrgb&w=900',
+  ),
+];
+
+// ─── Bookmarked IDs ───────────────────────────────────────────────────────────
+final Set<String> expertBookmarkedIds = {};
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
 class ExpertArticlePage extends StatefulWidget {
   const ExpertArticlePage({super.key});
 
   @override
-  State<ExpertArticlePage> createState() => _ExpertArticlePageState();
+  State<ExpertArticlePage> createState() => ExpertArticlePageState();
 }
 
-class _ExpertArticlePageState extends State<ExpertArticlePage> {
-  static const Color kYellow = Color(0xFFFFFF9F);
-  static const Color kLightGreen = Color(0xFFD0FF99);
-  static const Color kGreen = Color(0xFF99FF99);
-  static const Color kTosca = Color(0xFF76EAD0);
-  static const Color kBlue = Color(0xFF76D7EA);
+class ExpertArticlePageState extends State<ExpertArticlePage> {
+  int navIndex = 1;
+  String selectedCategory = 'All';
+  final TextEditingController searchCtrl = TextEditingController();
+  String searchQuery = '';
+  List<ExpertArticleItem> filtered = [];
 
-  static const Color kTextDark = Color(0xFF111827);
-  static const Color kTextGrey = Color(0xFF6B7280);
-
-  final TextEditingController _searchController = TextEditingController();
-
-  String selectedFilter = 'All';
-  final Set<int> bookmarkedArticles = {};
-
-  final List<String> filters = [
-    'All',
-    'My Articles',
-    'Indoor Plants',
-    'Outdoor Plants',
-    'Vegetables',
-    'Fruits',
-    'Herbs',
-  ];
-
-  final List<Map<String, String>> articles = [
-    {
-      'title': 'Complete Guide to Monstera Deliciosa Care',
-      'author': 'Dr. James Mitchell',
-      'time': '2 days ago',
-      'category': 'Indoor Plants',
-      'image': 'assets/images/cover-artikel1.jpg',
-    },
-    {
-      'title': 'Beginner Guide to Hydroponic Gardening',
-      'author': 'You',
-      'time': '5 days ago',
-      'category': 'Vegetables',
-      'image': 'assets/images/cover-artikel2.jpg',
-    },
-    {
-      'title': 'Natural Solutions for Common Plant Pests',
-      'author': 'Dr. Sarah Chen',
-      'time': '1 week ago',
-      'category': 'Herbs',
-      'image': 'assets/images/cover-artikel3.jpg',
-    },
-    {
-      'title': 'Top 10 Low-Maintenance Outdoor Plants',
-      'author': 'Michael Green',
-      'time': '1 week ago',
-      'category': 'Outdoor Plants',
-      'image': 'assets/images/cover-artikel4.jpg',
-    },
-    {
-      'title': 'Succulent Care: Everything You Need to Know',
-      'author': 'Emma Rodriguez',
-      'time': '2 weeks ago',
-      'category': 'Indoor Plants',
-      'image': 'assets/images/cover-artikel1.jpg',
-    },
-  ];
-
-  List<Map<String, String>> get filteredArticles {
-    final keyword = _searchController.text.toLowerCase();
-
-    return articles.where((article) {
-      final title = article['title']!.toLowerCase();
-      final author = article['author']!.toLowerCase();
-      final category = article['category']!;
-
-      final matchSearch = title.contains(keyword) || author.contains(keyword);
-      final matchFilter =
-          selectedFilter == 'All' ? true : category == selectedFilter;
-
-      return matchSearch && matchFilter;
-    }).toList();
-  }
-
-  void _onBottomNavTapped(int index) {
-    switch (index) {
-      case 0:
-        Navigator.pushReplacementNamed(context, '/expert_home');
-        break;
-      case 1:
-        Navigator.pushReplacementNamed(context, '/expert_article');
-        break;
-      case 2:
-        Navigator.pushReplacementNamed(context, '/expert_consult');
-        break;
-      case 3:
-        Navigator.pushReplacementNamed(context, '/expert_setting');
-        break;
+  String getFallbackImage(String category) {
+    switch (category) {
+      case 'Ornamental Plants':
+        return 'https://images.pexels.com/photos/6208086/pexels-photo-6208086.jpeg?auto=compress&cs=tinysrgb&w=900';
+      case 'Vegetables & Food Crops':
+        return 'https://images.pexels.com/photos/4505161/pexels-photo-4505161.jpeg?auto=compress&cs=tinysrgb&w=900';
+      case 'Fruit Plants':
+        return 'https://images.pexels.com/photos/2090902/pexels-photo-2090902.jpeg?auto=compress&cs=tinysrgb&w=900';
+      case 'Herbs & Spices':
+        return 'https://images.pexels.com/photos/143133/pexels-photo-143133.jpeg?auto=compress&cs=tinysrgb&w=900';
+      default:
+        return 'https://images.pexels.com/photos/4751978/pexels-photo-4751978.jpeg?auto=compress&cs=tinysrgb&w=900';
     }
   }
 
-  void _toggleBookmark(int index) {
+  @override
+  void initState() {
+    super.initState();
+    filtered = List.from(allExpertArticles);
+    searchCtrl.addListener(onSearch);
+  }
+
+  @override
+  void dispose() {
+    searchCtrl.removeListener(onSearch);
+    searchCtrl.dispose();
+    super.dispose();
+  }
+
+  void onSearch() {
     setState(() {
-      if (bookmarkedArticles.contains(index)) {
-        bookmarkedArticles.remove(index);
+      searchQuery = searchCtrl.text.trim().toLowerCase();
+      applyFilter();
+    });
+  }
+
+  void applyFilter() {
+    filtered = allExpertArticles.where((a) {
+      final matchCat =
+          selectedCategory == 'All' || a.category == selectedCategory;
+
+      final matchSearch = searchQuery.isEmpty ||
+          a.title.toLowerCase().contains(searchQuery) ||
+          a.author.toLowerCase().contains(searchQuery) ||
+          a.category.toLowerCase().contains(searchQuery);
+
+      return matchCat && matchSearch;
+    }).toList();
+  }
+
+  void selectCategory(String cat) {
+    setState(() {
+      selectedCategory = cat;
+      applyFilter();
+    });
+  }
+
+  void toggleBookmark(ExpertArticleItem article) {
+    setState(() {
+      if (expertBookmarkedIds.contains(article.id)) {
+        expertBookmarkedIds.remove(article.id);
+        article.isBookmarked = false;
       } else {
-        bookmarkedArticles.add(index);
+        expertBookmarkedIds.add(article.id);
+        article.isBookmarked = true;
       }
     });
   }
 
-  void _openArticle(Map<String, String> article) {
-    Navigator.pushNamed(
+  void onNavTapped(int index) {
+    if (index == navIndex) return;
+
+    setState(() => navIndex = index);
+
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (ctx) => ExpertHomePage(),
+          ),
+        );
+        break;
+
+      case 2:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (ctx) => ExpertConsultPage(),
+          ),
+        );
+        break;
+
+      case 3:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (ctx) => ExpertAccountPage(),
+          ),
+        );
+        break;
+    }
+  }
+
+  void goToDetailArticle() {
+    Navigator.push(
       context,
-      '/expert_article_detail',
-      arguments: article,
-    );
+      MaterialPageRoute(
+        builder: (ctx) => ExpertDetailArtikelPage(),
+      ),
+    ).then((_) => setState(() {}));
   }
 
   @override
   Widget build(BuildContext context) {
-    final data = filteredArticles;
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7F7),
-      appBar: _buildAppBar(),
+      backgroundColor: kExArtScaffold,
       body: Column(
         children: [
-          _buildSearchAndFilter(),
+          buildHeader(),
           Expanded(
-            child: data.isEmpty
-                ? Center(
-                    child: Text(
-                      'No articles found',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        color: kTextGrey,
-                      ),
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 90),
-                    itemCount: data.length,
-                    itemBuilder: (context, index) {
-                      final article = data[index];
-                      final originalIndex = articles.indexOf(article);
-
-                      return _buildArticleCard(
-                        article: article,
-                        index: originalIndex,
-                        isBookmarked:
-                            bookmarkedArticles.contains(originalIndex),
-                      );
-                    },
-                  ),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                children: [
+                  const SizedBox(height: 14),
+                  buildCategoryTabs(),
+                  const SizedBox(height: 14),
+                  filtered.isEmpty ? buildEmpty() : buildArticleList(),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: kBlue,
-        elevation: 8,
+        backgroundColor: kExArtMain,
+        elevation: 6,
         shape: const CircleBorder(),
-        onPressed: () {
-          Navigator.pushNamed(context, '/expert_write_article');
-        },
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ExpertTulisArtikelPage(),
+          ),
+        ),
         child: const Icon(
           Icons.add,
           color: Colors.white,
-          size: 32,
+          size: 28,
         ),
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
+      bottomNavigationBar: buildBottomNav(),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: kBlue,
-      elevation: 0,
-      centerTitle: true,
-      leading: IconButton(
-        onPressed: () {
-          Navigator.pushReplacementNamed(context, '/expert_home');
-        },
-        icon: const Icon(
-          Icons.arrow_back,
-          color: kTextDark,
-        ),
-      ),
-      title: Text(
-        'Articles',
-        style: GoogleFonts.inter(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: kTextDark,
-        ),
-      ),
-      actions: [
-        IconButton(
-          onPressed: () {
-            Navigator.pushNamed(context, '/expert_bookmark_article');
-          },
-          icon: const Icon(
-            Icons.bookmark,
-            color: Color(0xFF374151),
-            size: 28,
-          ),
-        ),
-        const SizedBox(width: 8),
-      ],
-    );
-  }
-
-  Widget _buildSearchAndFilter() {
+  // ── Header ────────────────────────────────────────────────────────────────
+  Widget buildHeader() {
     return Container(
-      color: const Color(0xFFF7F7F7),
-      padding: const EdgeInsets.fromLTRB(16, 18, 0, 12),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (_) => setState(() {}),
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: kTextDark,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Search by title or author',
-                hintStyle: GoogleFonts.inter(
-                  fontSize: 14,
-                  color: Colors.grey.shade500,
-                ),
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: Colors.grey.shade500,
-                  size: 28,
-                ),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(vertical: 15),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: kBlue, width: 1.5),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 34,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: filters.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final filter = filters[index];
-                final isSelected = selectedFilter == filter;
-
-                return GestureDetector(
-                  onTap: () {
-                    if (filter == 'My Articles') {
-                      Navigator.pushNamed(context, '/expert_my_article');
-                      return;
-                    }
-
-                    setState(() {
-                      selectedFilter = filter;
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: isSelected ? kBlue : Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: isSelected ? kBlue : Colors.grey.shade300,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [kExArtBlue, kExArtTeal],
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.25),
+                        shape: BoxShape.circle,
                       ),
-                    ),
-                    child: Text(
-                      filter,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w500,
-                        color: isSelected ? Colors.white : kTextDark,
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white,
+                        size: 16,
                       ),
                     ),
                   ),
-                );
-              },
+                  Text(
+                    'Articles',
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (ctx) => ExpertBookmarkPage(),
+                      ),
+                    ).then((_) => setState(() {})),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.25),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.bookmark_outline_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 14),
+
+              // Search bar
+              Container(
+                height: 54,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: searchCtrl,
+                  textAlignVertical: TextAlignVertical.center,
+                  style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    color: Colors.black87,
+                    height: 1.1,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Search by title or author...',
+                    hintStyle: GoogleFonts.outfit(
+                      fontSize: 16,
+                      color: Colors.grey.shade400,
+                      height: 1.1,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: Colors.grey.shade400,
+                      size: 24,
+                    ),
+                    suffixIcon: searchQuery.isNotEmpty
+                        ? IconButton(
+                            onPressed: () => searchCtrl.clear(),
+                            icon: Icon(
+                              Icons.close,
+                              size: 22,
+                              color: Colors.grey.shade400,
+                            ),
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 15,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Category Tabs ─────────────────────────────────────────────────────────
+  Widget buildCategoryTabs() {
+    return SizedBox(
+      height: 36,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.only(left: 16, right: 6),
+        itemCount: expertArtikelCategories.length,
+        itemBuilder: (ctx, i) {
+          final cat = expertArtikelCategories[i];
+          final isSel = cat == selectedCategory;
+
+          return GestureDetector(
+            onTap: () => selectCategory(cat),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: isSel ? kExArtMain : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isSel ? kExArtMain : Colors.grey.shade300,
+                  width: 1.2,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  cat,
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isSel ? Colors.white : Colors.grey.shade600,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ── Empty ─────────────────────────────────────────────────────────────────
+  Widget buildEmpty() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 60),
+      child: Column(
+        children: [
+          Icon(
+            Icons.search_off_rounded,
+            size: 52,
+            color: Colors.grey.shade300,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'No articles found',
+            style: GoogleFonts.outfit(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade400,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Try a different keyword or category',
+            style: GoogleFonts.outfit(
+              fontSize: 13,
+              color: Colors.grey.shade400,
             ),
           ),
         ],
@@ -307,30 +526,38 @@ class _ExpertArticlePageState extends State<ExpertArticlePage> {
     );
   }
 
-  Widget _buildArticleCard({
-    required Map<String, String> article,
-    required int index,
-    required bool isBookmarked,
-  }) {
+  // ── Article List ──────────────────────────────────────────────────────────
+  Widget buildArticleList() {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: filtered.length,
+      itemBuilder: (ctx, i) => buildArticleCard(filtered[i]),
+    );
+  }
+
+  Widget buildArticleCard(ExpertArticleItem article) {
+    final isBookmarked = expertBookmarkedIds.contains(article.id);
+
     return GestureDetector(
-      onTap: () => _openArticle(article),
+      onTap: goToDetailArticle,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 18),
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: article['author'] == 'You'
-                ? kBlue.withOpacity(0.45)
-                : Colors.transparent,
-            width: 1.4,
-          ),
+          borderRadius: BorderRadius.circular(16),
+          border: article.isMine
+              ? Border.all(
+                  color: kExArtMain.withOpacity(0.5),
+                  width: 1.5,
+                )
+              : null,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -340,132 +567,180 @@ class _ExpertArticlePageState extends State<ExpertArticlePage> {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(11),
-                  child: Image.asset(
-                    article['image']!,
-                    height: 140,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
+                  child: Image.network(
+                    article.imageUrl,
+                    height: 180,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) {
+                    loadingBuilder: (ctx, child, progress) {
+                      if (progress == null) return child;
+
                       return Container(
-                        height: 140,
+                        height: 180,
                         width: double.infinity,
-                        color: kLightGreen.withOpacity(0.4),
+                        color: kExArtTeal.withOpacity(0.15),
                         child: Center(
-                          child: Image.asset(
-                            'assets/images/logo-hijau.png',
-                            width: 42,
-                            height: 42,
-                            errorBuilder: (_, __, ___) {
-                              return const Icon(
-                                Icons.image_outlined,
-                                size: 40,
-                                color: Colors.grey,
-                              );
-                            },
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: kExArtMain,
+                            value: progress.expectedTotalBytes != null
+                                ? progress.cumulativeBytesLoaded /
+                                    progress.expectedTotalBytes!
+                                : null,
                           ),
                         ),
                       );
                     },
+                    errorBuilder: (ctx, e, s) => Image.network(
+                      getFallbackImage(article.category),
+                      height: 180,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        height: 180,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              kExArtLGreen.withOpacity(0.8),
+                              kExArtTeal.withOpacity(0.7),
+                            ],
+                          ),
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.eco_rounded,
+                            color: Colors.green.shade700,
+                            size: 46,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
+
+                // Badge My Article
+                if (article.isMine)
+                  Positioned(
+                    top: 10,
+                    left: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: kExArtMain,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'My Article',
+                        style: GoogleFonts.outfit(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // Bookmark button
                 Positioned(
                   top: 10,
                   right: 10,
                   child: GestureDetector(
-                    onTap: () => _toggleBookmark(index),
-                    child: Container(
-                      width: 38,
-                      height: 38,
+                    onTap: () => toggleBookmark(article),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 34,
+                      height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: isBookmarked
+                            ? kExArtMain
+                            : Colors.white.withOpacity(0.9),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.12),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
                       child: Icon(
                         isBookmarked
-                            ? Icons.bookmark
-                            : Icons.bookmark_border,
-                        color: isBookmarked ? kBlue : Colors.grey.shade600,
-                        size: 25,
+                            ? Icons.bookmark_rounded
+                            : Icons.bookmark_outline_rounded,
+                        size: 18,
+                        color:
+                            isBookmarked ? Colors.white : Colors.grey.shade600,
                       ),
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            Text(
-              article['title']!,
-              style: GoogleFonts.inter(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: kTextDark,
-                height: 1.35,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 11,
-                  backgroundImage: AssetImage(
-                    article['author'] == 'You'
-                        ? 'assets/images/fotoprofile.png'
-                        : 'assets/images/ikon profile.jpg',
-                  ),
-                  backgroundColor: kBlue.withOpacity(0.25),
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    article['author']!,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: kTextGrey,
-                      fontWeight: FontWeight.w500,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    article.category,
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: kExArtMain,
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '•',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: kTextGrey,
+                  const SizedBox(height: 5),
+                  Text(
+                    article.title,
+                    style: GoogleFonts.outfit(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                      height: 1.35,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  article['time']!,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: kTextGrey,
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Text(
+                        article.author,
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: article.isMine
+                              ? kExArtMain
+                              : Colors.grey.shade500,
+                          fontWeight: article.isMine
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: Text(
+                          '•',
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            color: Colors.grey.shade400,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        article.time,
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
-              decoration: BoxDecoration(
-                color: _getCategoryColor(article['category']!),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                article['category']!,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: _getCategoryTextColor(article['category']!),
-                ),
+                ],
               ),
             ),
           ],
@@ -474,41 +749,8 @@ class _ExpertArticlePageState extends State<ExpertArticlePage> {
     );
   }
 
-  Color _getCategoryColor(String category) {
-    switch (category) {
-      case 'Indoor Plants':
-        return kTosca.withOpacity(0.25);
-      case 'Outdoor Plants':
-        return kGreen.withOpacity(0.25);
-      case 'Vegetables':
-        return kLightGreen.withOpacity(0.35);
-      case 'Fruits':
-        return kYellow.withOpacity(0.55);
-      case 'Herbs':
-        return kBlue.withOpacity(0.22);
-      default:
-        return kTosca.withOpacity(0.22);
-    }
-  }
-
-  Color _getCategoryTextColor(String category) {
-    switch (category) {
-      case 'Indoor Plants':
-        return const Color(0xFF20C9A6);
-      case 'Outdoor Plants':
-        return const Color(0xFF35B76E);
-      case 'Vegetables':
-        return const Color(0xFF3D8B40);
-      case 'Fruits':
-        return const Color(0xFF9A7B00);
-      case 'Herbs':
-        return const Color(0xFF2EA9BF);
-      default:
-        return kTextDark;
-    }
-  }
-
-  Widget _buildBottomNavBar() {
+  // ── Bottom Nav ────────────────────────────────────────────────────────────
+  Widget buildBottomNav() {
     final List<Map<String, dynamic>> items = [
       {
         'label': 'Home',
@@ -549,11 +791,11 @@ class _ExpertArticlePageState extends State<ExpertArticlePage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: List.generate(items.length, (index) {
-              final bool isSelected = index == 1;
+              final bool isSel = navIndex == index;
 
               return GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: () => _onBottomNavTapped(index),
+                onTap: () => onNavTapped(index),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
@@ -567,23 +809,20 @@ class _ExpertArticlePageState extends State<ExpertArticlePage> {
                         width: 24,
                         height: 24,
                         fit: BoxFit.contain,
-                        color: isSelected ? kBlue : Colors.grey.shade400,
-                        errorBuilder: (_, __, ___) {
-                          return Icon(
-                            items[index]['fallback'] as IconData,
-                            color: isSelected ? kBlue : Colors.grey.shade400,
-                            size: 24,
-                          );
-                        },
+                        color: isSel ? kExArtMain : Colors.grey.shade400,
+                        errorBuilder: (_, __, ___) => Icon(
+                          items[index]['fallback'] as IconData,
+                          color: isSel ? kExArtMain : Colors.grey.shade400,
+                          size: 24,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         items[index]['label'] as String,
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.outfit(
                           fontSize: 11,
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.w400,
-                          color: isSelected ? kBlue : Colors.grey.shade400,
+                          fontWeight: isSel ? FontWeight.w600 : FontWeight.w400,
+                          color: isSel ? kExArtMain : Colors.grey.shade400,
                         ),
                       ),
                     ],
