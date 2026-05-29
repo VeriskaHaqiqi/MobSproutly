@@ -7,6 +7,7 @@ import 'expert_my_article.dart';
 import 'expert_setting_jadwal.dart';
 import 'expert_setting_biaya.dart';
 import 'expert_chat.dart';
+import 'expert_locked_chat.dart';
 import 'expert_setting.dart';
 import 'expert_artikel.dart';
 import 'expert_detail_artikel.dart';
@@ -19,27 +20,6 @@ const Color kExHomeBlue = Color(0xFF76D7EA);
 const Color kExHomeMain = Color(0xFF5DCFCF);
 const Color kExHomeScaffold = Color(0xFFF0F4F3);
 const Color kExHomeDark = Color(0xFF1E2E2B);
-
-final List<Map<String, dynamic>> _expertConsults = [
-  {
-    'name': 'Michael Torres',
-    'topic': 'My monstera leaves are turning yellow...',
-    'time': '2h ago',
-    'avatar': 'https://randomuser.me/api/portraits/men/32.jpg',
-  },
-  {
-    'name': 'Emma Williams',
-    'topic': 'Thank you for the watering advice!',
-    'time': '5h ago',
-    'avatar': 'https://randomuser.me/api/portraits/women/44.jpg',
-  },
-  {
-    'name': 'James Anderson',
-    'topic': 'Is this root rot on my fiddle leaf fig?',
-    'time': '1d ago',
-    'avatar': 'https://randomuser.me/api/portraits/men/75.jpg',
-  },
-];
 
 final List<Map<String, dynamic>> _expertArticles = [
   {
@@ -68,17 +48,33 @@ final List<Map<String, dynamic>> _expertArticles = [
 class ExpertHomePage extends StatelessWidget {
   const ExpertHomePage({super.key});
 
-  void _goToExpertChat(BuildContext context, Map<String, dynamic> client) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ExpertChatPage(
-          clientName: client['name'] as String,
-          clientAvatar: client['avatar'] as String,
-          topic: client['topic'] as String,
+  List<ExpertConsultItem> _activityFeed() {
+    final feed = [...requestedConsults, ...activeConsults];
+    return feed.take(5).toList();
+  }
+
+  void _onConsultCardTap(BuildContext context, ExpertConsultItem item) {
+    final isRequested = requestedConsults.any((c) => c.id == item.id);
+
+    if (isRequested) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ExpertLockedChatPage(consult: item),
         ),
-      ),
-    );
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ExpertChatPage(
+            clientName: item.clientName,
+            clientAvatar: item.clientAvatar,
+            topic: item.topic,
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -97,7 +93,7 @@ class ExpertHomePage extends StatelessWidget {
                   const SizedBox(height: 16),
                   _buildUploadBanner(context),
                   const SizedBox(height: 28),
-                  _buildConsultationsSection(context),
+                  _buildActivitySection(context),
                   const SizedBox(height: 28),
                   _buildArticlesSection(context),
                   const SizedBox(height: 28),
@@ -113,6 +109,7 @@ class ExpertHomePage extends StatelessWidget {
     );
   }
 
+  // ── Header ────────────────────────────────────────────────────────────────
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
@@ -216,15 +213,14 @@ class ExpertHomePage extends StatelessWidget {
     );
   }
 
+  // ── Upload Banner ─────────────────────────────────────────────────────────
   Widget _buildUploadBanner(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: GestureDetector(
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => ExpertTulisArtikelPage(),
-          ),
+          MaterialPageRoute(builder: (_) => ExpertTulisArtikelPage()),
         ),
         child: Container(
           padding: const EdgeInsets.all(20),
@@ -313,30 +309,47 @@ class ExpertHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildConsultationsSection(BuildContext context) {
+  // ── Activity Feed ─────────────────────────────────────────────────────────
+  Widget _buildActivitySection(BuildContext context) {
+    final feed = _activityFeed();
+    final hasRequested = requestedConsults.isNotEmpty;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Ongoing Consultations',
-                style: GoogleFonts.outfit(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Consultations',
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    if (hasRequested)
+                      Text(
+                        '${requestedConsults.length} new request${requestedConsults.length > 1 ? 's' : ''} waiting',
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: Colors.orange.shade600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                  ],
                 ),
               ),
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => ExpertConsultPage(),
-                  ),
+                  MaterialPageRoute(builder: (_) => ExpertConsultPage()),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(6),
@@ -354,21 +367,80 @@ class ExpertHomePage extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        ..._expertConsults.map((c) => _buildConsultCard(context, c)),
+        if (feed.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    size: 36,
+                    color: Colors.grey.shade300,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'No active consultations',
+                    style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      color: Colors.grey.shade400,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          ...feed.map((item) => _buildActivityCard(context, item)),
       ],
     );
   }
 
-  Widget _buildConsultCard(BuildContext context, Map<String, dynamic> c) {
+  Widget _buildActivityCard(BuildContext context, ExpertConsultItem item) {
+    final isRequested = requestedConsults.any((c) => c.id == item.id);
+
+    final Color badgeColor = isRequested ? Colors.orange : kExHomeMain;
+    final Color badgeBg = isRequested
+        ? Colors.orange.withOpacity(0.12)
+        : kExHomeTeal.withOpacity(0.15);
+
+    final String badgeLabel = isRequested ? 'New Request' : 'Ongoing';
+
+    final IconData statusIcon = isRequested
+        ? Icons.notifications_rounded
+        : Icons.chat_bubble_outline_rounded;
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => _goToExpertChat(context, c),
+      onTap: () => _onConsultCardTap(context, item),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
+          border: isRequested
+              ? Border(
+                  left: BorderSide(
+                    color: Colors.orange.withOpacity(0.6),
+                    width: 3,
+                  ),
+                )
+              : null,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
@@ -379,102 +451,182 @@ class ExpertHomePage extends StatelessWidget {
         ),
         child: Row(
           children: [
-            ClipOval(
-              child: Image.network(
-                c['avatar'] as String,
-                width: 48,
-                height: 48,
-                fit: BoxFit.cover,
-                loadingBuilder: (ctx, child, p) {
-                  if (p == null) return child;
-                  return Container(
+            Stack(
+              children: [
+                ClipOval(
+                  child: Image.network(
+                    item.clientAvatar,
                     width: 48,
                     height: 48,
-                    color: kExHomeTeal.withOpacity(0.2),
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: kExHomeMain,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (ctx, child, p) {
+                      if (p == null) return child;
+                      return Container(
+                        width: 48,
+                        height: 48,
+                        color: kExHomeTeal.withOpacity(0.2),
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: kExHomeMain,
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (ctx, e, s) => Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: kExHomeTeal.withOpacity(0.2),
+                        shape: BoxShape.circle,
                       ),
-                    ),
-                  );
-                },
-                errorBuilder: (ctx, e, s) => Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: kExHomeTeal.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      (c['name'] as String)[0],
-                      style: GoogleFonts.outfit(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: kExHomeMain,
+                      child: Center(
+                        child: Text(
+                          item.clientName.isNotEmpty ? item.clientName[0] : '?',
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: kExHomeMain,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+                if (!isRequested && item.isOnline)
+                  Positioned(
+                    bottom: 1,
+                    right: 1,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4CAF50),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    c['name'] as String,
-                    style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black87,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.clientName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        item.time,
+                        style: GoogleFonts.outfit(
+                          fontSize: 11,
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    c['topic'] as String,
+                    item.topic,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: kExHomeTeal.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    'Ongoing',
                     style: GoogleFonts.outfit(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: kExHomeMain,
                     ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  c['time'] as String,
-                  style: GoogleFonts.outfit(
-                    fontSize: 11,
-                    color: Colors.grey.shade400,
+                  const SizedBox(height: 5),
+                  if (isRequested)
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.lock_outline_rounded,
+                          size: 13,
+                          color: Colors.orange.shade600,
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            'Waiting for payment verification',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.outfit(
+                              fontSize: 12,
+                              color: Colors.orange.shade600,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    Text(
+                      item.lastMessage,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        color:
+                            item.isRead ? Colors.grey.shade500 : Colors.black87,
+                        fontWeight:
+                            item.isRead ? FontWeight.w400 : FontWeight.w600,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: badgeBg,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(statusIcon, size: 10, color: badgeColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        badgeLabel,
+                        style: GoogleFonts.outfit(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: badgeColor,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                if (!isRequested && !item.isRead) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Colors.orange,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
               ],
             ),
           ],
@@ -483,6 +635,7 @@ class ExpertHomePage extends StatelessWidget {
     );
   }
 
+  // ── Articles Section ──────────────────────────────────────────────────────
   Widget _buildArticlesSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -504,9 +657,7 @@ class ExpertHomePage extends StatelessWidget {
                 behavior: HitTestBehavior.opaque,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => ExpertMyArticlePage(),
-                  ),
+                  MaterialPageRoute(builder: (_) => ExpertMyArticlePage()),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(6),
@@ -549,7 +700,7 @@ class ExpertHomePage extends StatelessWidget {
               id: article['title'] as String,
               category: 'Ornamental Plants',
               title: article['title'] as String,
-              author: 'Dr. Taehyun Chen',
+              author: 'Dr. Isyana Chen',
               time: article['date'] as String,
               imageUrl: article['image'] as String,
               isMine: true,
@@ -664,6 +815,7 @@ class ExpertHomePage extends StatelessWidget {
     );
   }
 
+  // ── Quick Actions ─────────────────────────────────────────────────────────
   Widget _buildQuickActions(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -774,6 +926,7 @@ class ExpertHomePage extends StatelessWidget {
     );
   }
 
+  // ── Bottom Nav ────────────────────────────────────────────────────────────
   Widget _buildBottomNavBar(BuildContext context) {
     final List<Map<String, dynamic>> items = [
       {
@@ -825,23 +978,17 @@ class ExpertHomePage extends StatelessWidget {
                   if (index == 1) {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => ExpertArticlePage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => ExpertArticlePage()),
                     );
                   } else if (index == 2) {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => ExpertConsultPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => ExpertConsultPage()),
                     );
                   } else if (index == 3) {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const ExpertAccountPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => ExpertAccountPage()),
                     );
                   }
                 },
@@ -881,146 +1028,6 @@ class ExpertHomePage extends StatelessWidget {
             }),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class ExpertAccountPage extends StatelessWidget {
-  const ExpertAccountPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kExHomeScaffold,
-      appBar: AppBar(
-        backgroundColor: kExHomeBlue,
-        foregroundColor: Colors.black87,
-        elevation: 0,
-        title: Text(
-          'Expert Account',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  const CircleAvatar(
-                    radius: 42,
-                    backgroundImage: NetworkImage(
-                      'https://randomuser.me/api/portraits/women/68.jpg',
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'Dr. Isyana Chen',
-                    style: GoogleFonts.outfit(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Orchid Specialist',
-                    style: GoogleFonts.outfit(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 18),
-            _accountTile(
-              icon: Icons.person_outline,
-              title: 'Edit Profile',
-              subtitle: 'Update expert profile information',
-            ),
-            _accountTile(
-              icon: Icons.calendar_month_outlined,
-              title: 'Schedule Settings',
-              subtitle: 'Manage available consultation time',
-            ),
-            _accountTile(
-              icon: Icons.payments_outlined,
-              title: 'Fee Settings',
-              subtitle: 'Manage consultation price',
-            ),
-            _accountTile(
-              icon: Icons.logout_rounded,
-              title: 'Logout',
-              subtitle: 'Sign out from expert account',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _accountTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: kExHomeMain),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.outfit(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.outfit(
-                    fontSize: 12,
-                    color: Colors.grey.shade500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Icon(
-            Icons.chevron_right_rounded,
-            color: Colors.grey,
-          ),
-        ],
       ),
     );
   }

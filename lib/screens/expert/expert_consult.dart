@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'expert_home.dart';
+import 'expert_home.dart' hide ExpertAccountPage;
 import 'expert_artikel.dart';
 import 'expert_setting.dart';
 import 'expert_chat.dart';
@@ -13,6 +13,22 @@ const Color kExConTeal = Color(0xFF76EAD0);
 const Color kExConBlue = Color(0xFF76D7EA);
 const Color kExConLGreen = Color(0xFFD0FF99);
 const Color kExConScaffold = Color(0xFFF0F4F3);
+
+String formatRupiah(num amount) {
+  final value = amount.round().toString();
+  final buffer = StringBuffer();
+
+  for (int i = 0; i < value.length; i++) {
+    final reverseIndex = value.length - i;
+    buffer.write(value[i]);
+
+    if (reverseIndex > 1 && reverseIndex % 3 == 1) {
+      buffer.write('.');
+    }
+  }
+
+  return 'Rp${buffer.toString()}';
+}
 
 // ─── Consult Item Model ───────────────────────────────────────────────────────
 class ExpertConsultItem {
@@ -42,44 +58,43 @@ class ExpertConsultItem {
 }
 
 // ─── Dummy Data ───────────────────────────────────────────────────────────────
+// Requested dan Active dibuat sama karena ini dari sisi ahli.
+// Completed yang lebih lama boleh beda karena bisa dianggap tarif lama.
 final List<ExpertConsultItem> requestedConsults = [
   ExpertConsultItem(
     id: 'r1',
     clientName: 'Isyana Saraswati',
-    clientAvatar:
-        'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=150&q=80&auto=format&fit=crop',
-    lastMessage: 'Hi! I need help with my monstera leaves turning yellow.',
+    clientAvatar: 'https://randomuser.me/api/portraits/women/65.jpg',
+    lastMessage: '',
     time: '10m ago',
     isOnline: true,
     isRead: false,
     topic: 'Monstera leaf yellowing',
-    sessionFee: 45.00,
+    sessionFee: 45000,
     category: 'Ornamental Plants',
   ),
   ExpertConsultItem(
     id: 'r2',
     clientName: 'Fathir LKMM TM',
-    clientAvatar:
-        'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&q=80&auto=format&fit=crop',
-    lastMessage: 'I want advice on setting up a drip irrigation system.',
+    clientAvatar: 'https://randomuser.me/api/portraits/men/32.jpg',
+    lastMessage: '',
     time: '2h ago',
     isOnline: true,
     isRead: false,
     topic: 'Drip irrigation setup',
-    sessionFee: 50.00,
+    sessionFee: 45000,
     category: 'Vegetables & Food Crops',
   ),
   ExpertConsultItem(
     id: 'r3',
     clientName: 'Pilemon',
-    clientAvatar:
-        'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&q=80&auto=format&fit=crop',
-    lastMessage: 'My basil plants are wilting despite regular watering.',
+    clientAvatar: 'https://randomuser.me/api/portraits/men/11.jpg',
+    lastMessage: '',
     time: 'Yesterday',
     isOnline: false,
     isRead: true,
     topic: 'Basil wilting issue',
-    sessionFee: 40.00,
+    sessionFee: 45000,
     category: 'Herbs & Spices',
   ),
 ];
@@ -88,40 +103,37 @@ final List<ExpertConsultItem> activeConsults = [
   ExpertConsultItem(
     id: 'a1',
     clientName: 'Adela Ulin',
-    clientAvatar:
-        'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&q=80&auto=format&fit=crop',
+    clientAvatar: 'https://randomuser.me/api/portraits/women/44.jpg',
     lastMessage: 'Those leaf patterns indicate a nutrient deficiency.',
     time: 'Mar 12',
     isOnline: true,
     isRead: true,
     topic: 'Leaf pattern diagnosis',
-    sessionFee: 45.00,
+    sessionFee: 45000,
     category: 'Ornamental Plants',
   ),
   ExpertConsultItem(
     id: 'a2',
     clientName: 'Radhin Infest',
-    clientAvatar:
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80&auto=format&fit=crop',
+    clientAvatar: 'https://randomuser.me/api/portraits/men/55.jpg',
     lastMessage: 'Current market trends show organic methods are preferred.',
     time: 'Mar 10',
     isOnline: false,
     isRead: false,
     topic: 'Organic farming advice',
-    sessionFee: 55.00,
+    sessionFee: 45000,
     category: 'Vegetables & Food Crops',
   ),
   ExpertConsultItem(
     id: 'a3',
     clientName: 'Saputri',
-    clientAvatar:
-        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80&auto=format&fit=crop',
+    clientAvatar: 'https://randomuser.me/api/portraits/women/76.jpg',
     lastMessage: 'Perfect! The pH levels are now optimal.',
     time: 'Mar 8',
     isOnline: false,
     isRead: true,
     topic: 'Soil pH management',
-    sessionFee: 48.00,
+    sessionFee: 45000,
     category: 'Fruit Plants',
   ),
 ];
@@ -130,40 +142,37 @@ final List<ExpertConsultItem> completedConsults = [
   ExpertConsultItem(
     id: 'c1',
     clientName: 'Michael Torres',
-    clientAvatar:
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80&auto=format&fit=crop',
+    clientAvatar: 'https://randomuser.me/api/portraits/men/70.jpg',
     lastMessage: 'Thank you so much! My orchid is recovering.',
     time: 'Mar 5',
     isOnline: false,
     isRead: true,
     topic: 'Orchid root rot treatment',
-    sessionFee: 45.00,
+    sessionFee: 45000,
     category: 'Ornamental Plants',
   ),
   ExpertConsultItem(
     id: 'c2',
     clientName: 'Emma Williams',
-    clientAvatar:
-        'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=150&q=80&auto=format&fit=crop',
+    clientAvatar: 'https://randomuser.me/api/portraits/women/68.jpg',
     lastMessage: 'The watering schedule worked perfectly!',
     time: 'Feb 28',
     isOnline: false,
     isRead: true,
     topic: 'Hydroponic lettuce care',
-    sessionFee: 50.00,
+    sessionFee: 40000,
     category: 'Vegetables & Food Crops',
   ),
   ExpertConsultItem(
     id: 'c3',
     clientName: 'James Anderson',
-    clientAvatar:
-        'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&q=80&auto=format&fit=crop',
+    clientAvatar: 'https://randomuser.me/api/portraits/men/41.jpg',
     lastMessage: 'Great advice on the pruning technique.',
     time: 'Feb 20',
     isOnline: false,
     isRead: true,
     topic: 'Rose bush pruning',
-    sessionFee: 42.00,
+    sessionFee: 40000,
     category: 'Ornamental Plants',
   ),
 ];
@@ -183,8 +192,6 @@ class ExpertConsultPage extends StatefulWidget {
 
 class ExpertConsultPageState extends State<ExpertConsultPage> {
   int navIndex = 2;
-
-  // Default yang kebuka sekarang Active
   late int tabIndex;
 
   final TextEditingController searchCtrl = TextEditingController();
@@ -245,27 +252,19 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
       case 0:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (ctx) => ExpertHomePage(),
-          ),
+          MaterialPageRoute(builder: (ctx) => ExpertHomePage()),
         );
         break;
-
       case 1:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (ctx) => ExpertArticlePage(),
-          ),
+          MaterialPageRoute(builder: (ctx) => ExpertArticlePage()),
         );
         break;
-
       case 3:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (ctx) => ExpertAccountPage(),
-          ),
+          MaterialPageRoute(builder: (ctx) => ExpertAccountPage()),
         );
         break;
     }
@@ -274,7 +273,6 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
   void onCardTap(ExpertConsultItem item) {
     switch (tabIndex) {
       case 0:
-        // Requested → belum bisa chat, masuk ke locked/request detail
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -284,7 +282,6 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
         break;
 
       case 1:
-        // Active → expert chat
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -298,12 +295,9 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
         break;
 
       case 2:
-        // Completed → riwayat konsultasi
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (ctx) => ExpertRiwayatConsultPage(),
-          ),
+          MaterialPageRoute(builder: (ctx) => ExpertRiwayatConsultPage()),
         );
         break;
     }
@@ -312,9 +306,7 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
   void openRiwayatConsult() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (ctx) => ExpertRiwayatConsultPage(),
-      ),
+      MaterialPageRoute(builder: (ctx) => ExpertRiwayatConsultPage()),
     );
   }
 
@@ -344,7 +336,6 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
     );
   }
 
-  // ── Header ────────────────────────────────────────────────────────────────
   Widget buildHeader() {
     return Container(
       decoration: const BoxDecoration(
@@ -404,8 +395,6 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
                 ],
               ),
               const SizedBox(height: 14),
-
-              // Search bar
               Container(
                 height: 54,
                 decoration: BoxDecoration(
@@ -466,7 +455,6 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
     );
   }
 
-  // ── Tab Bar ───────────────────────────────────────────────────────────────
   Widget buildTabBar() {
     final tabs = [
       _TabInfo('Requested', requestedConsults.length, Colors.orange),
@@ -517,7 +505,7 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
                               color: tab.color.withOpacity(0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
-                            )
+                            ),
                           ]
                         : null,
                   ),
@@ -567,7 +555,6 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
     );
   }
 
-  // ── Empty ─────────────────────────────────────────────────────────────────
   Widget buildEmpty() {
     final labels = [
       'No new requests',
@@ -612,7 +599,6 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
     );
   }
 
-  // ── Card ──────────────────────────────────────────────────────────────────
   Widget buildCard(ExpertConsultItem item) {
     return GestureDetector(
       onTap: () => onCardTap(item),
@@ -632,7 +618,6 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
         ),
         child: Row(
           children: [
-            // Avatar + online dot
             Stack(
               children: [
                 ClipOval(
@@ -665,7 +650,7 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
                       ),
                       child: Center(
                         child: Text(
-                          item.clientName[0],
+                          item.clientName.isNotEmpty ? item.clientName[0] : '?',
                           style: GoogleFonts.outfit(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -676,7 +661,7 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
                     ),
                   ),
                 ),
-                if (item.isOnline)
+                if (item.isOnline && tabIndex != 0)
                   Positioned(
                     bottom: 2,
                     right: 2,
@@ -695,10 +680,7 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
                   ),
               ],
             ),
-
             const SizedBox(width: 12),
-
-            // Content
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -708,6 +690,8 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
                       Expanded(
                         child: Text(
                           item.clientName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.outfit(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
@@ -724,10 +708,7 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 5),
-
-                  // Topic badge
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -748,9 +729,31 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
                       ),
                     ),
                   ),
-
-                  // Requested tidak menampilkan isi chat
-                  if (tabIndex != 0) ...[
+                  if (tabIndex == 0) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.lock_outline_rounded,
+                          size: 13,
+                          color: Colors.orange.shade600,
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            'Waiting for payment verification',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.outfit(
+                              fontSize: 12,
+                              color: Colors.orange.shade600,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ] else ...[
                     const SizedBox(height: 5),
                     Text(
                       item.lastMessage,
@@ -768,10 +771,7 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
                 ],
               ),
             ),
-
             const SizedBox(width: 8),
-
-            // Right side indicators
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -786,7 +786,7 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      '\$${item.sessionFee.toStringAsFixed(0)}',
+                      formatRupiah(item.sessionFee),
                       style: GoogleFonts.outfit(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -823,7 +823,6 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
     );
   }
 
-  // ── Bottom Nav ────────────────────────────────────────────────────────────
   Widget buildBottomNav() {
     final List<Map<String, dynamic>> items = [
       {
@@ -911,7 +910,6 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
   }
 }
 
-// Helper class for tab info
 class _TabInfo {
   final String label;
   final int count;

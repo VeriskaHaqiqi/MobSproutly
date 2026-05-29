@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'expert_consult.dart';
-import 'expert_home.dart';
+import 'expert_home.dart' hide ExpertAccountPage;
 import 'expert_artikel.dart';
 import 'expert_setting.dart';
 
@@ -39,6 +39,7 @@ class ExpertRiwayatConsultPageState extends State<ExpertRiwayatConsultPage> {
   @override
   void initState() {
     super.initState();
+
     searchCtrl.addListener(() {
       setState(() {
         searchQuery = searchCtrl.text.trim().toLowerCase();
@@ -194,7 +195,9 @@ class ExpertRiwayatConsultPageState extends State<ExpertRiwayatConsultPage> {
                               color: kExRiwTeal.withOpacity(0.3),
                               child: Center(
                                 child: Text(
-                                  item.clientName[0],
+                                  item.clientName.isNotEmpty
+                                      ? item.clientName[0]
+                                      : '?',
                                   style: GoogleFonts.outfit(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w700,
@@ -212,6 +215,8 @@ class ExpertRiwayatConsultPageState extends State<ExpertRiwayatConsultPage> {
                             children: [
                               Text(
                                 item.clientName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: GoogleFonts.outfit(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w700,
@@ -353,7 +358,7 @@ class ExpertRiwayatConsultPageState extends State<ExpertRiwayatConsultPage> {
                       color: kExRiwTeal.withOpacity(0.3),
                       child: Center(
                         child: Text(
-                          item.clientName[0],
+                          item.clientName.isNotEmpty ? item.clientName[0] : '?',
                           style: GoogleFonts.outfit(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
@@ -627,7 +632,7 @@ class ExpertRiwayatConsultPageState extends State<ExpertRiwayatConsultPage> {
                               color: kExRiwMain.withOpacity(0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
-                            )
+                            ),
                           ]
                         : null,
                   ),
@@ -747,7 +752,7 @@ class ExpertRiwayatConsultPageState extends State<ExpertRiwayatConsultPage> {
                     color: kExRiwTeal.withOpacity(0.25),
                     child: Center(
                       child: Text(
-                        item.clientName[0],
+                        item.clientName.isNotEmpty ? item.clientName[0] : '?',
                         style: GoogleFonts.outfit(
                           fontSize: 22,
                           fontWeight: FontWeight.w700,
@@ -764,6 +769,8 @@ class ExpertRiwayatConsultPageState extends State<ExpertRiwayatConsultPage> {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     item.clientName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -840,7 +847,7 @@ class ExpertRiwayatConsultPageState extends State<ExpertRiwayatConsultPage> {
               ),
               const Spacer(),
               Text(
-                '\$${item.sessionFee.toStringAsFixed(2)}',
+                formatRupiah(item.sessionFee),
                 style: GoogleFonts.outfit(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'expert_artikel.dart';
 import 'expert_detail_artikel.dart';
-import 'expert_home.dart';
+import 'expert_home.dart' hide ExpertAccountPage;
 import 'expert_consult.dart';
 import 'expert_setting.dart';
 
