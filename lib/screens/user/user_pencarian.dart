@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../providers/expert_provider.dart';
+import '../../utils/model_converter.dart';
 import 'user_home.dart';
 import 'user_artikel.dart';
 import 'user_consult.dart';
@@ -74,386 +77,7 @@ class ReviewItem {
   });
 }
 
-// ─── Dummy Data — all 4 categories covered ────────────────────────────────────
-final List<ExpertItem> allExperts = [
-  // ── Ornamental Plants ──────────────────────────────────────────────────────
-  ExpertItem(
-    id: '1',
-    name: 'Dr. Emily Chen',
-    degree: 'PhD Botany, UC Berkeley',
-    rating: 4.9,
-    yearsExp: 8,
-    isAvailableNow: true,
-    availableText: 'Available Now',
-    specialties: ['Orchids', 'Monstera', 'Tropical Plants'],
-    bio:
-        'Dr. Chen specializes in rare orchid species and tropical ornamental plants. She has helped over 500 plant owners successfully grow and troubleshoot common issues with monstera, philodendron, and calathea.',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80',
-    category: 'Ornamental Plants',
-    pricePerSession: 50000,
-    topics: [
-      'orchid',
-      'monstera',
-      'philodendron',
-      'calathea',
-      'pothos',
-      'spider plant',
-      'anthurium',
-      'peace lily',
-      'indoor'
-    ],
-    totalConsultations: 520,
-    avgResponse: '2 min',
-    reviews: [
-      ReviewItem(
-          name: 'Emily R.',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=80&q=80',
-          stars: 5,
-          comment:
-              'Dr. Chen helped save my dying orchid! Very knowledgeable and patient.'),
-      ReviewItem(
-          name: 'Mike T.',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&q=80',
-          stars: 5,
-          comment: 'Great advice on my monstera. The leaves are thriving now!'),
-      ReviewItem(
-          name: 'Lisa K.',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&q=80',
-          stars: 4,
-          comment:
-              'Very detailed explanation about calathea care. Highly recommend.'),
-    ],
-  ),
-  ExpertItem(
-    id: '2',
-    name: 'Dr. Sarah Lee',
-    degree: 'PhD Plant Science, MIT',
-    rating: 5.0,
-    yearsExp: 6,
-    isAvailableNow: true,
-    availableText: 'Available Now',
-    specialties: ['Succulents', 'Cactus', 'Snake Plant'],
-    bio:
-        'Dr. Lee is a specialist in drought-resistant ornamental plants. She focuses on succulent and cactus care, ZZ plant, snake plant, and kuping gajah for home environments.',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=200&q=80',
-    category: 'Ornamental Plants',
-    pricePerSession: 60000,
-    topics: [
-      'succulent',
-      'cactus',
-      'ZZ plant',
-      'snake plant',
-      'kuping gajah',
-      'spider plant',
-      'aglaonema',
-      'indoor'
-    ],
-    totalConsultations: 310,
-    avgResponse: '5 min',
-    reviews: [
-      ReviewItem(
-          name: 'Anna W.',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=80&q=80',
-          stars: 5,
-          comment: 'Best advice for my succulent collection!'),
-      ReviewItem(
-          name: 'James P.',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&q=80',
-          stars: 5,
-          comment:
-              'My cactus is finally growing again after following her tips.'),
-    ],
-  ),
 
-  // ── Vegetables & Food Crops ─────────────────────────────────────────────────
-  ExpertItem(
-    id: '3',
-    name: 'Mark Thompson',
-    degree: 'MSc Agriculture, Cornell University',
-    rating: 4.8,
-    yearsExp: 12,
-    isAvailableNow: false,
-    availableText: 'Next available: Today 3 PM',
-    specialties: ['Tomatoes', 'Chili Plants', 'Hydroponics'],
-    bio:
-        'Mark is an expert in organic vegetable farming and hydroponic systems. He specializes in growing tomatoes, chili, eggplant, and leafy greens in small home gardens and polybag setups.',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80',
-    category: 'Vegetables & Food Crops',
-    pricePerSession: 45000,
-    topics: [
-      'tomato',
-      'chili',
-      'eggplant',
-      'spinach',
-      'lettuce',
-      'kale',
-      'cucumber',
-      'long beans',
-      'hydroponic',
-      'polybag'
-    ],
-    totalConsultations: 430,
-    avgResponse: '10 min',
-    reviews: [
-      ReviewItem(
-          name: 'David P.',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=80&q=80',
-          stars: 5,
-          comment:
-              'Mark helped me set up my first hydroponic system. Works great!'),
-      ReviewItem(
-          name: 'Clara M.',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&q=80',
-          stars: 4,
-          comment: 'Very practical tips for growing tomatoes in small pots.'),
-    ],
-  ),
-  ExpertItem(
-    id: '4',
-    name: 'Dr. James Wilson',
-    degree: 'MSc Agronomy, Bogor Agricultural University',
-    rating: 4.6,
-    yearsExp: 15,
-    isAvailableNow: false,
-    availableText: 'Next available: Tomorrow 9 AM',
-    specialties: ['Rice', 'Corn', 'Root Crops'],
-    bio:
-        'Dr. Wilson is an agronomist with 15 years of experience in staple food crops including rice, corn, cassava, and sweet potato. He also advises on small-scale farming and polybag vegetable cultivation.',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80',
-    category: 'Vegetables & Food Crops',
-    pricePerSession: 40000,
-    topics: [
-      'rice',
-      'corn',
-      'cassava',
-      'sweet potato',
-      'peanut',
-      'food crop',
-      'small farm',
-      'celery',
-      'spring onion'
-    ],
-    totalConsultations: 280,
-    avgResponse: '15 min',
-    reviews: [
-      ReviewItem(
-          name: 'Robert S.',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=80&q=80',
-          stars: 4,
-          comment: 'Great knowledge on cassava cultivation. Very helpful!'),
-      ReviewItem(
-          name: 'Nadia F.',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&q=80',
-          stars: 5,
-          comment: 'Helped me fix my corn plants that were turning yellow.'),
-    ],
-  ),
-
-  // ── Fruit Plants ────────────────────────────────────────────────────────────
-  ExpertItem(
-    id: '5',
-    name: 'Dr. Aisha Patel',
-    degree: 'PhD Horticulture, Wageningen University',
-    rating: 4.7,
-    yearsExp: 10,
-    isAvailableNow: true,
-    availableText: 'Available Now',
-    specialties: ['Citrus', 'Strawberry', 'Container Fruits'],
-    bio:
-        'Dr. Patel specializes in container fruit trees and tropical fruit cultivation for home gardens. She helps growers with citrus, strawberry, mango, and avocado in pots and small yards.',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80',
-    category: 'Fruit Plants',
-    pricePerSession: 55000,
-    topics: [
-      'citrus',
-      'orange',
-      'lemon',
-      'strawberry',
-      'mango',
-      'avocado',
-      'guava',
-      'dragon fruit',
-      'container',
-      'pot'
-    ],
-    totalConsultations: 390,
-    avgResponse: '3 min',
-    reviews: [
-      ReviewItem(
-          name: 'Sophie L.',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=80&q=80',
-          stars: 5,
-          comment: 'My container lemon tree is finally bearing fruit!'),
-      ReviewItem(
-          name: 'Tom A.',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&q=80',
-          stars: 5,
-          comment: 'Excellent advice on strawberry care in small pots.'),
-      ReviewItem(
-          name: 'Hana B.',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&q=80',
-          stars: 4,
-          comment: 'Very helpful with my mango tabulampot questions.'),
-    ],
-  ),
-  ExpertItem(
-    id: '6',
-    name: 'Kevin Lim',
-    degree: 'BSc Horticulture, University of Indonesia',
-    rating: 4.5,
-    yearsExp: 5,
-    isAvailableNow: false,
-    availableText: 'Next available: Today 6 PM',
-    specialties: ['Banana', 'Papaya', 'Tropical Fruits'],
-    bio:
-        'Kevin specializes in tropical fruits for home gardens and small yards. He focuses on banana, papaya, watermelon, melon, and dragon fruit cultivation for everyday growers.',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&q=80',
-    category: 'Fruit Plants',
-    pricePerSession: 35000,
-    topics: [
-      'banana',
-      'papaya',
-      'watermelon',
-      'melon',
-      'grape',
-      'dragon fruit',
-      'passion fruit',
-      'tropical'
-    ],
-    totalConsultations: 175,
-    avgResponse: '8 min',
-    reviews: [
-      ReviewItem(
-          name: 'Rina M.',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=80&q=80',
-          stars: 4,
-          comment: 'Good advice on dragon fruit care. Easy to follow.'),
-      ReviewItem(
-          name: 'Dani W.',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&q=80',
-          stars: 5,
-          comment: 'Kevin helped fix my papaya tree. Growing well now!'),
-    ],
-  ),
-
-  // ── Herbs & Spices ──────────────────────────────────────────────────────────
-  ExpertItem(
-    id: '7',
-    name: 'Dr. Priya Sharma',
-    degree: 'PhD Ethnobotany, Gadjah Mada University',
-    rating: 4.9,
-    yearsExp: 9,
-    isAvailableNow: true,
-    availableText: 'Available Now',
-    specialties: ['Basil', 'Ginger', 'Medicinal Herbs'],
-    bio:
-        'Dr. Sharma is an expert in culinary and medicinal herbs. She specializes in growing ginger, turmeric, lemongrass, basil, rosemary, and aloe vera for home kitchens and small gardens.',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=200&q=80',
-    category: 'Herbs & Spices',
-    pricePerSession: 48000,
-    topics: [
-      'basil',
-      'ginger',
-      'turmeric',
-      'lemongrass',
-      'rosemary',
-      'mint',
-      'aloe vera',
-      'oregano',
-      'pandan',
-      'herb',
-      'spice'
-    ],
-    totalConsultations: 460,
-    avgResponse: '4 min',
-    reviews: [
-      ReviewItem(
-          name: 'Nina R.',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&q=80',
-          stars: 5,
-          comment:
-              'Dr. Sharma helped me set up a small herb garden on my balcony. Amazing!'),
-      ReviewItem(
-          name: 'Ben C.',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=80&q=80',
-          stars: 5,
-          comment: 'Best advice for growing ginger and turmeric in pots.'),
-      ReviewItem(
-          name: 'Yuki S.',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=80&q=80',
-          stars: 4,
-          comment: 'Very detailed and practical knowledge about herb care.'),
-    ],
-  ),
-  ExpertItem(
-    id: '8',
-    name: 'Marcus Thompson',
-    degree: 'MSc Herbal Science, University of Edinburgh',
-    rating: 4.6,
-    yearsExp: 7,
-    isAvailableNow: false,
-    availableText: 'Next available: Tomorrow 10 AM',
-    specialties: ['Rosemary', 'Mint', 'Lemongrass'],
-    bio:
-        'Marcus focuses on international culinary herbs and aromatics. He helps home growers with rosemary, mint, oregano, lemongrass, and pandan for cooking and home use.',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80',
-    category: 'Herbs & Spices',
-    pricePerSession: 42000,
-    topics: [
-      'rosemary',
-      'mint',
-      'oregano',
-      'lemongrass',
-      'pandan',
-      'lime leaf',
-      'kemangi',
-      'aromatic',
-      'culinary'
-    ],
-    totalConsultations: 220,
-    avgResponse: '12 min',
-    reviews: [
-      ReviewItem(
-          name: 'Claire D.',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&q=80',
-          stars: 5,
-          comment:
-              'My rosemary and mint are thriving after Marcus\'s guidance!'),
-      ReviewItem(
-          name: 'Owen P.',
-          avatarUrl:
-              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&q=80',
-          stars: 4,
-          comment: 'Great tips on growing aromatic herbs in small spaces.'),
-    ],
-  ),
-];
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 class UserPencarianScreen extends StatefulWidget {
@@ -479,6 +103,11 @@ class UserPencarianScreenState extends State<UserPencarianScreen> {
     super.initState();
     searchCtrl.addListener(() =>
         setState(() => searchQuery = searchCtrl.text.trim().toLowerCase()));
+    
+    // Fetch experts from database
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ExpertProvider>(context, listen: false).fetchExperts(refresh: true);
+    });
   }
 
   @override
@@ -488,7 +117,11 @@ class UserPencarianScreenState extends State<UserPencarianScreen> {
   }
 
   List<ExpertItem> get filteredExperts {
-    List<ExpertItem> list = allExperts.where((e) {
+    final expertProvider = Provider.of<ExpertProvider>(context);
+    final rawExperts = expertProvider.experts;
+    List<ExpertItem> list = rawExperts.map((e) => ModelConverter.userToExpertItem(e)).toList();
+
+    list = list.where((e) {
       final matchCat =
           selectedCategory == 'All' || e.category == selectedCategory;
       final matchSearch = searchQuery.isEmpty ||
@@ -746,7 +379,10 @@ class UserPencarianScreenState extends State<UserPencarianScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final expertProvider = Provider.of<ExpertProvider>(context);
     final experts = filteredExperts;
+    final isLoading = expertProvider.isLoading && expertProvider.experts.isEmpty;
+
     return Scaffold(
       backgroundColor: kPencarianScaffold,
       body: Column(
@@ -754,14 +390,20 @@ class UserPencarianScreenState extends State<UserPencarianScreen> {
           buildHeader(),
           buildCategoryBar(),
           Expanded(
-            child: experts.isEmpty
-                ? buildEmpty()
-                : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: experts.length,
-                    itemBuilder: (ctx, i) => buildExpertCard(experts[i]),
-                  ),
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator(color: kPencarianMain))
+                : experts.isEmpty
+                    ? buildEmpty()
+                    : RefreshIndicator(
+                        onRefresh: () => expertProvider.fetchExperts(refresh: true),
+                        color: kPencarianMain,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: experts.length,
+                          itemBuilder: (ctx, i) => buildExpertCard(experts[i]),
+                        ),
+                      ),
           ),
         ],
       ),

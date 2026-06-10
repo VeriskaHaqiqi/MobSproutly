@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:provider/provider.dart';
+import '../../providers/consultation_provider.dart';
+import '../../utils/model_converter.dart';
 import 'user_pencarian.dart';
 import 'user_chat.dart';
 import 'user_consult.dart';
@@ -16,27 +19,42 @@ const Color kPayScaffold = Color(0xFFF0F4F3);
 
 class UserPembayaranScreen extends StatefulWidget {
   final ExpertItem expert;
+  final int? consultationId;
 
-  const UserPembayaranScreen({super.key, required this.expert});
+  const UserPembayaranScreen({super.key, required this.expert, this.consultationId});
 
   @override
   State<UserPembayaranScreen> createState() => UserPembayaranScreenState();
 }
 
 class UserPembayaranScreenState extends State<UserPembayaranScreen> {
-  // Upload state
+  // State variables
   String? uploadedFileName;
   File? uploadedFile;
   bool isUploading = false;
   bool isConfirming = false;
 
-  // Dummy bank info
-  final String bankName = 'BNI';
-  final String accountNumber = '1234 5678 9012';
-  String get accountHolder =>
-      widget.expert.name.replaceAll('Dr. ', '').replaceAll('Dr.', '');
+  String get bankName {
+    final consultationProvider = Provider.of<ConsultationProvider>(context);
+    return consultationProvider.expertBank?['bank_name'] ?? 'BNI';
+  }
 
-  double get consultationFee => widget.expert.pricePerSession;
+  String get accountNumber {
+    final consultationProvider = Provider.of<ConsultationProvider>(context);
+    return consultationProvider.expertBank?['account_number'] ?? '1234 5678 9012';
+  }
+
+  String get accountHolder {
+    final consultationProvider = Provider.of<ConsultationProvider>(context);
+    return consultationProvider.expertBank?['account_holder'] ??
+        widget.expert.name.replaceAll('Dr. ', '').replaceAll('Dr.', '');
+  }
+
+  double get consultationFee {
+    final consultationProvider = Provider.of<ConsultationProvider>(context);
+    return consultationProvider.currentConsultation?.fee ?? widget.expert.pricePerSession;
+  }
+
   double get platformFee => 2500;
   double get totalFee => consultationFee + platformFee;
 
@@ -72,8 +90,29 @@ class UserPembayaranScreenState extends State<UserPembayaranScreen> {
     }
   }
 
-  void handleConfirm() {
-    if (uploadedFileName == null) {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final consultationProvider = Provider.of<ConsultationProvider>(context, listen: false);
+      if (widget.consultationId != null) {
+        consultationProvider.fetchConsultationDetail(widget.consultationId!);
+      } else {
+        consultationProvider.startConsultation(
+          int.parse(widget.expert.id),
+          'Consultation about ${widget.expert.specialties.first}',
+        );
+      }
+    });
+  }
+
+  void handleConfirm() async {
+    final consultationProvider = Provider.of<ConsultationProvider>(context, listen: false);
+    final currentCon = consultationProvider.currentConsultation;
+
+    if (currentCon == null) return;
+
+    if (uploadedFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Please upload your payment receipt first.',
@@ -89,19 +128,111 @@ class UserPembayaranScreenState extends State<UserPembayaranScreen> {
 
     setState(() => isConfirming = true);
 
-    // Simulate verification delay
-    Future.delayed(const Duration(seconds: 2), () {
-      if (!mounted) return;
-      setState(() => isConfirming = false);
+    final success = await consultationProvider.uploadPaymentProof(
+      currentCon.id,
+      uploadedFile!.path,
+    );
 
-      // 50/50 random: verified or rejected
-      final isVerified = Random().nextBool();
-      if (isVerified) {
-        showVerifiedDialog();
-      } else {
-        showRejectedDialog();
-      }
-    });
+    setState(() => isConfirming = false);
+
+    if (success) {
+      showUploadedSuccessDialog();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(consultationProvider.errorMessage ?? 'Upload failed. Please try again.',
+              style: GoogleFonts.outfit(fontSize: 13)),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    }
+  }
+
+  void showUploadedSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      kPayTeal.withOpacity(0.3),
+                      kPayTeal.withOpacity(0.05),
+                    ],
+                  ),
+                ),
+                child: Center(
+                  child: Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: kPayTeal.withOpacity(0.25),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.check_rounded,
+                        color: kPayMain, size: 28),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+
+              Text('Proof Uploaded',
+                  style: GoogleFonts.outfit(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87)),
+              const SizedBox(height: 8),
+              Text(
+                'Your payment proof has been successfully uploaded. Please wait for the expert to verify it.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(
+                    fontSize: 13, color: Colors.grey.shade500, height: 1.55),
+              ),
+              const SizedBox(height: 24),
+
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.pop(context);
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [kPayBlue, kPayMain],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Text('OK',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   // ── Verified Dialog ───────────────────────────────────────────────────────
@@ -1021,10 +1152,13 @@ class UserPembayaranScreenState extends State<UserPembayaranScreen> {
 
   // ── Upload Box ────────────────────────────────────────────────────────────
   Widget buildUploadBox() {
-    final bool hasFile = uploadedFileName != null;
+    final consultationProvider = Provider.of<ConsultationProvider>(context);
+    final currentCon = consultationProvider.currentConsultation;
+    final isWaitingVerification = currentCon?.status == 'waiting_verification';
+    final bool hasFile = uploadedFileName != null || isWaitingVerification;
 
     return GestureDetector(
-      onTap: isUploading ? null : pickFile,
+      onTap: (isUploading || isWaitingVerification) ? null : pickFile,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
@@ -1034,14 +1168,28 @@ class UserPembayaranScreenState extends State<UserPembayaranScreen> {
           border: Border.all(
             color: hasFile ? kPayMain : Colors.grey.shade300,
             width: 1.5,
-            style: hasFile ? BorderStyle.solid : BorderStyle.solid,
           ),
         ),
         child: Column(
           children: [
             if (isUploading)
               const CircularProgressIndicator(strokeWidth: 2, color: kPayMain)
-            else if (hasFile) ...[
+            else if (isWaitingVerification) ...[
+              const Icon(Icons.hourglass_empty_rounded,
+                  color: kPayMain, size: 36),
+              const SizedBox(height: 10),
+              Text('Verification In Progress',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: kPayMain)),
+              const SizedBox(height: 4),
+              Text('The expert is currently verifying your payment proof.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                      fontSize: 11, color: Colors.grey.shade500)),
+            ] else if (hasFile) ...[
               const Icon(Icons.check_circle_outline_rounded,
                   color: kPayMain, size: 36),
               const SizedBox(height: 10),
@@ -1091,8 +1239,29 @@ class UserPembayaranScreenState extends State<UserPembayaranScreen> {
 
   // ── Confirm Button ────────────────────────────────────────────────────────
   Widget buildConfirmButton() {
+    final consultationProvider = Provider.of<ConsultationProvider>(context);
+    final currentCon = consultationProvider.currentConsultation;
+    final isWaitingVerification = currentCon?.status == 'waiting_verification';
+
+    if (isWaitingVerification) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade300,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text('Awaiting Verification',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: Colors.white)),
+      );
+    }
+
     return GestureDetector(
-      onTap: isConfirming ? null : handleConfirm,
+      onTap: (isConfirming || consultationProvider.isActionLoading) ? null : handleConfirm,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -1125,7 +1294,7 @@ class UserPembayaranScreenState extends State<UserPembayaranScreen> {
                         strokeWidth: 2, color: Colors.white),
                   ),
                   const SizedBox(width: 10),
-                  Text('Verifying...',
+                  Text('Uploading...',
                       style: GoogleFonts.outfit(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,

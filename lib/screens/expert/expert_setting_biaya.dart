@@ -5,6 +5,8 @@ import 'expert_home.dart';
 import 'expert_artikel.dart';
 import 'expert_consult.dart';
 import 'expert_setting.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 const Color kBiayaMain = Color(0xFF5DCFCF);
 const Color kBiayaTeal = Color(0xFF76EAD0);
@@ -14,11 +16,7 @@ const Color kBiayaGreen = Color(0xFF99FF99);
 const Color kBiayaYellow = Color(0xFFFFFF9F);
 const Color kBiayaScaffold = Color(0xFFF0F4F3);
 
-// ─── Global fee state ─────────────────────────────────────────────────────────
-class ExpertFeeState {
-  static double feeRp = 50000;
-  static String currency = 'Rp';
-}
+// ─── Global fee state removed ─────────────────────────────────────────────────
 
 class ExpertSettingBiayaPage extends StatefulWidget {
   const ExpertSettingBiayaPage({super.key});
@@ -40,8 +38,10 @@ class _ExpertSettingBiayaPageState extends State<ExpertSettingBiayaPage> {
   @override
   void initState() {
     super.initState();
-    selectedCurrency = ExpertFeeState.currency;
-    _feeCtrl.text = ExpertFeeState.feeRp.toInt().toString();
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    selectedCurrency = 'Rp';
+    final fee = user?.expertProfile?.sessionFee ?? 50000.0;
+    _feeCtrl.text = fee.toInt().toString();
   }
 
   @override
@@ -60,7 +60,7 @@ class _ExpertSettingBiayaPageState extends State<ExpertSettingBiayaPage> {
     });
   }
 
-  void _handleSave() {
+  void _handleSave() async {
     final fee = _parsedFee;
     setState(() {
       if (_feeCtrl.text.trim().isEmpty) {
@@ -76,13 +76,20 @@ class _ExpertSettingBiayaPageState extends State<ExpertSettingBiayaPage> {
     if (feeErr != null) return;
 
     setState(() => isSaving = true);
-    Future.delayed(const Duration(milliseconds: 1000), () {
-      if (!mounted) return;
-      ExpertFeeState.feeRp = fee;
-      ExpertFeeState.currency = selectedCurrency;
+    
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final success = await auth.updateExpertProfile(sessionFee: fee);
+    
+    if (mounted) {
       setState(() => isSaving = false);
-      _showSuccessDialog();
-    });
+      if (success) {
+        _showSuccessDialog();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(auth.errorMessage ?? 'Failed to update fee')),
+        );
+      }
+    }
   }
 
   void _showSuccessDialog() {
@@ -274,6 +281,9 @@ class _ExpertSettingBiayaPageState extends State<ExpertSettingBiayaPage> {
 
   // ── Current Fee Card ──────────────────────────────────────────────────────
   Widget _buildCurrentFeeCard() {
+    final user = Provider.of<AuthProvider>(context).user;
+    final currentFee = user?.expertProfile?.sessionFee ?? 0.0;
+    
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -301,7 +311,7 @@ class _ExpertSettingBiayaPageState extends State<ExpertSettingBiayaPage> {
                         fontSize: 12, color: Colors.white.withOpacity(0.85))),
                 const SizedBox(height: 4),
                 Text(
-                  '${ExpertFeeState.currency} ${_formatNumber(ExpertFeeState.feeRp.toInt())}',
+                  'Rp ${_formatNumber(currentFee.toInt())}',
                   style: GoogleFonts.outfit(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,

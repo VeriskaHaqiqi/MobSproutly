@@ -5,7 +5,8 @@ import 'expert_home.dart' hide ExpertAccountPage;
 import 'expert_artikel.dart';
 import 'expert_consult.dart';
 import 'expert_setting.dart';
-
+import 'package:provider/provider.dart';
+import '../../providers/rating_provider.dart';
 const Color kRatMain = Color(0xFF5DCFCF);
 const Color kRatTeal = Color(0xFF76EAD0);
 const Color kRatBlue = Color(0xFF76D7EA);
@@ -27,75 +28,6 @@ class ExpertRatingItem {
     required this.reviewText,
   });
 }
-
-// ─── Dummy Data ───────────────────────────────────────────────────────────────
-// Data yang belum dirating sudah dihapus.
-final List<ExpertRatingItem> _ratings = [
-  ExpertRatingItem(
-    id: '1',
-    consultDate: 'Dec 15, 2024',
-    topic: 'Orchid root care discussion',
-    rating: 5.0,
-    reviewText:
-        'Dr. Isyana was incredibly knowledgeable and patient. She explained everything clearly and my orchid is recovering beautifully. Highly recommend!',
-  ),
-  ExpertRatingItem(
-    id: '2',
-    consultDate: 'Dec 12, 2024',
-    topic: 'Tomato fungus issue',
-    rating: 4.0,
-    reviewText:
-        'Very helpful advice about powdery mildew. The treatment she recommended worked within a week. Would consult again.',
-  ),
-  ExpertRatingItem(
-    id: '3',
-    consultDate: 'Dec 8, 2024',
-    topic: 'Hydroponic setup guidance',
-    rating: 5.0,
-    reviewText:
-        'Amazing session! She walked me through every step of setting up my hydroponic system. Her expertise is unmatched. 10/10!',
-  ),
-  ExpertRatingItem(
-    id: '4',
-    consultDate: 'Dec 3, 2024',
-    topic: 'Rose bush pruning',
-    rating: 4.0,
-    reviewText:
-        'Good consultation overall. The pruning technique she described worked well. A bit rushed but still very informative.',
-  ),
-  ExpertRatingItem(
-    id: '5',
-    consultDate: 'Nov 28, 2024',
-    topic: 'Monstera care tips',
-    rating: 5.0,
-    reviewText:
-        'Absolutely loved the session. Very detailed advice and she even followed up with extra tips. My monstera is thriving now!',
-  ),
-  ExpertRatingItem(
-    id: '6',
-    consultDate: 'Nov 20, 2024',
-    topic: 'Basil herb growing',
-    rating: 3.0,
-    reviewText:
-        'Decent advice but I was hoping for more specific product recommendations. Still helpful for a beginner like me.',
-  ),
-  ExpertRatingItem(
-    id: '7',
-    consultDate: 'Nov 16, 2024',
-    topic: 'Indoor plant selection advice',
-    rating: 2.0,
-    reviewText:
-        'The advice was okay, but I expected more detailed recommendations based on my room condition.',
-  ),
-  ExpertRatingItem(
-    id: '8',
-    consultDate: 'Nov 10, 2024',
-    topic: 'Leaf yellowing consultation',
-    rating: 1.0,
-    reviewText:
-        'The consultation did not really answer my issue clearly. I still needed to look for another solution.',
-  ),
-];
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 class ExpertRiwayatRatingPage extends StatefulWidget {
@@ -120,24 +52,53 @@ class _ExpertRiwayatRatingPageState extends State<ExpertRiwayatRatingPage> {
     '1 Star',
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<RatingProvider>(context, listen: false).fetchExpertRatings(refresh: true);
+    });
+  }
+
+  String _formatDate(DateTime? dt) {
+    if (dt == null) return 'Recently';
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+  }
+
+  List<ExpertRatingItem> get _providerRatings {
+    final provider = Provider.of<RatingProvider>(context);
+    return provider.ratings.map((r) {
+      return ExpertRatingItem(
+        id: r.id.toString(),
+        consultDate: _formatDate(r.createdAt),
+        topic: 'Plant Consultation', // Assuming topic isn't readily available in Rating without fetching consultation
+        rating: r.score.toDouble(),
+        reviewText: r.comment ?? '',
+      );
+    }).toList();
+  }
+
   List<ExpertRatingItem> get filtered {
-    if (_filter == 'All') return _ratings;
+    final ratings = _providerRatings;
+    if (_filter == 'All') return ratings;
 
     final selectedRating = int.tryParse(_filter.split(' ').first);
-    if (selectedRating == null) return _ratings;
+    if (selectedRating == null) return ratings;
 
-    return _ratings.where((r) => r.rating.floor() == selectedRating).toList();
+    return ratings.where((r) => r.rating.floor() == selectedRating).toList();
   }
 
   double get _avgRating {
-    if (_ratings.isEmpty) return 0;
-    return _ratings.fold(0.0, (sum, r) => sum + r.rating) / _ratings.length;
+    final ratings = _providerRatings;
+    if (ratings.isEmpty) return 0;
+    return ratings.fold(0.0, (sum, r) => sum + r.rating) / ratings.length;
   }
 
-  int get _totalReviews => _ratings.length;
+  int get _totalReviews => _providerRatings.length;
 
   int _countByRating(int star) {
-    return _ratings.where((r) => r.rating.floor() == star).length;
+    return _providerRatings.where((r) => r.rating.floor() == star).length;
   }
 
   void onNavTapped(int index) {

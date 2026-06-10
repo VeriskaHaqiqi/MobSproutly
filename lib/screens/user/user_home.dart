@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/article_provider.dart';
+import '../../providers/consultation_provider.dart';
+import '../../utils/model_converter.dart';
 
 import 'user_pencarian.dart';
 import 'user_artikel.dart';
@@ -15,36 +20,7 @@ const Color kHomeBlue = Color(0xFF76D7EA);
 const Color kHomeScaffold = Color(0xFFF0F4F3);
 const Color kHomeDark = Color(0xFF1E2E2B);
 
-final List<Map<String, dynamic>> _homeActivities = [
-  {
-    'icon': Icons.chat_bubble_outline,
-    'title': 'Dr. James Wilson replied',
-    'subtitle': 'Your orchid consultation has a new message',
-    'time': '10 minutes ago',
-    'color': kHomeTeal,
-  },
-  {
-    'icon': Icons.star_border,
-    'title': 'Rate your last session',
-    'subtitle': 'Share your experience with Dr. Sarah Lee',
-    'time': '1 hour ago',
-    'color': kHomeYellow,
-  },
-  {
-    'icon': Icons.calendar_today_outlined,
-    'title': 'Upcoming Consultation',
-    'subtitle': 'Your session with Dr. Emily Chen starts tomorrow',
-    'time': '3 hours ago',
-    'color': kHomeLightGreen,
-  },
-  {
-    'icon': Icons.payment_outlined,
-    'title': 'Payment Confirmed',
-    'subtitle': 'Your consultation payment has been received',
-    'time': 'Yesterday',
-    'color': kHomeBlue,
-  },
-];
+
 
 class HomeUserScreen extends StatefulWidget {
   const HomeUserScreen({super.key});
@@ -54,9 +30,20 @@ class HomeUserScreen extends StatefulWidget {
 }
 
 class _HomeUserScreenState extends State<HomeUserScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ArticleProvider>(context, listen: false).fetchArticles(refresh: true);
+      Provider.of<ConsultationProvider>(context, listen: false).fetchUserConsultations(refresh: true);
+    });
+  }
+
   List<ArticleItem> get _recommendedArticles {
-    if (allArticles.length <= 7) return allArticles;
-    return allArticles.sublist(0, 7);
+    final rawArticles = Provider.of<ArticleProvider>(context).articles;
+    final converted = rawArticles.map((a) => ModelConverter.articleToItem(a)).toList();
+    if (converted.length <= 7) return converted;
+    return converted.sublist(0, 7);
   }
 
   void _goToSearchConsultation() {
@@ -128,6 +115,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
 
   // ── Header (tanpa notifikasi) ─────────────────────────────────────────────
   Widget _buildHeader() {
+    final user = Provider.of<AuthProvider>(context).user;
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
@@ -154,7 +142,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
               ),
               const SizedBox(height: 2),
               Text(
-                'Sarah Johnson',
+                user?.name ?? 'User',   // <-- GANTI 'Sarah Johnson' DENGAN INI
                 style: GoogleFonts.inter(
                   fontSize: 22,
                   color: Colors.white,
@@ -434,6 +422,57 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
 
   // ── Recent Activity ───────────────────────────────────────────────────────
   Widget _buildRecentActivity() {
+    final consultations = Provider.of<ConsultationProvider>(context).userConsultations;
+    
+    // Convert recent consultations to activities
+    final List<Map<String, dynamic>> activities = consultations.take(4).map((c) {
+      String title = '';
+      String subtitle = '';
+      IconData icon = Icons.info_outline;
+      Color color = kHomeTeal;
+      
+      if (c.status == 'completed') {
+        title = 'Consultation Completed';
+        subtitle = 'Your session with ${c.expert?.name ?? 'Expert'} is done.';
+        icon = Icons.check_circle_outline;
+        color = kHomeLightGreen;
+      } else if (c.status == 'waiting_verification') {
+        title = 'Payment Pending Verification';
+        subtitle = 'Waiting for expert to verify your payment.';
+        icon = Icons.payment_outlined;
+        color = kHomeYellow;
+      } else if (c.status == 'active') {
+        title = 'Consultation Active';
+        subtitle = 'You have an ongoing session with ${c.expert?.name ?? 'Expert'}.';
+        icon = Icons.chat_bubble_outline;
+        color = kHomeBlue;
+      } else {
+        title = 'Consultation Requested';
+        subtitle = 'Waiting for payment / confirmation.';
+        icon = Icons.calendar_today_outlined;
+        color = kHomeTeal;
+      }
+      
+      // format time loosely
+      String timeStr = 'Recently';
+      if (c.createdAt != null) {
+        final diff = DateTime.now().difference(c.createdAt!);
+        if (diff.inDays > 0) timeStr = '${diff.inDays} days ago';
+        else if (diff.inHours > 0) timeStr = '${diff.inHours} hours ago';
+        else if (diff.inMinutes > 0) timeStr = '${diff.inMinutes} minutes ago';
+      }
+
+      return {
+        'icon': icon,
+        'title': title,
+        'subtitle': subtitle,
+        'time': timeStr,
+        'color': color,
+      };
+    }).toList();
+
+    if (activities.isEmpty) return const SizedBox.shrink();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -446,7 +485,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
                   color: Colors.black87)),
         ),
         const SizedBox(height: 14),
-        ..._homeActivities.map((activity) => _buildActivityItem(activity)),
+        ...activities.map((activity) => _buildActivityItem(activity)),
       ],
     );
   }

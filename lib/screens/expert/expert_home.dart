@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/consultation_provider.dart';
+import '../../providers/article_provider.dart';
+import '../../utils/model_converter.dart';
+import '../../models/user_model.dart';
 
 import 'expert_tulis_artikel.dart';
 import 'expert_consult.dart';
@@ -45,61 +51,80 @@ final List<Map<String, dynamic>> _expertArticles = [
   },
 ];
 
-class ExpertHomePage extends StatelessWidget {
+class ExpertHomePage extends StatefulWidget {
   const ExpertHomePage({super.key});
 
-  List<ExpertConsultItem> _activityFeed() {
-    final feed = [...requestedConsults, ...activeConsults];
-    return feed.take(5).toList();
+  @override
+  State<ExpertHomePage> createState() => _ExpertHomePageState();
+}
+
+class _ExpertHomePageState extends State<ExpertHomePage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ConsultationProvider>(context, listen: false).fetchExpertConsultations(refresh: true);
+      Provider.of<ArticleProvider>(context, listen: false).fetchMyArticles(refresh: true);
+    });
   }
 
   void _onConsultCardTap(BuildContext context, ExpertConsultItem item) {
-    final isRequested = requestedConsults.any((c) => c.id == item.id);
+    final provider = Provider.of<ConsultationProvider>(context, listen: false);
+    final c = provider.expertConsultations.firstWhere((element) => element.id.toString() == item.id);
 
-    if (isRequested) {
+    if (c.status == 'waiting_verification') {
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => ExpertLockedChatPage(consult: item),
         ),
-      );
+      ).then((_) => setState(() {}));
     } else {
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => ExpertChatPage(
+            consultationId: item.id,
             clientName: item.clientName,
             clientAvatar: item.clientAvatar,
             topic: item.topic,
           ),
         ),
-      );
+      ).then((_) => setState(() {}));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final expert = Provider.of<AuthProvider>(context).user;
     return Scaffold(
       backgroundColor: kExHomeScaffold,
       body: Column(
         children: [
-          _buildHeader(),
+          _buildHeader(expert),
           Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 16),
-                  _buildUploadBanner(context),
-                  const SizedBox(height: 28),
-                  _buildActivitySection(context),
-                  const SizedBox(height: 28),
-                  _buildArticlesSection(context),
-                  const SizedBox(height: 28),
-                  _buildQuickActions(context),
-                  const SizedBox(height: 32),
-                ],
+            child: RefreshIndicator(
+              onRefresh: () async {
+                await Provider.of<ConsultationProvider>(context, listen: false).fetchExpertConsultations(refresh: true);
+                await Provider.of<ArticleProvider>(context, listen: false).fetchMyArticles(refresh: true);
+              },
+              color: kExHomeMain,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    _buildUploadBanner(context),
+                    const SizedBox(height: 28),
+                    _buildActivitySection(context),
+                    const SizedBox(height: 28),
+                    _buildArticlesSection(context),
+                    const SizedBox(height: 28),
+                    _buildQuickActions(context),
+                    const SizedBox(height: 32),
+                  ],
+                ),
               ),
             ),
           ),
@@ -110,7 +135,15 @@ class ExpertHomePage extends StatelessWidget {
   }
 
   // ── Header ────────────────────────────────────────────────────────────────
-  Widget _buildHeader() {
+  Widget _buildHeader(User? expert) {
+    final avatar = expert != null ? ModelConverter.getUserAvatar(expert) : 'https://randomuser.me/api/portraits/women/68.jpg';
+    final name = expert?.name ?? 'Expert';
+    final specialization = expert?.specializations != null && expert!.specializations!.isNotEmpty
+        ? expert.specializations!.first.name
+        : 'Botanist';
+    final availStatus = expert?.expertProfile?.availabilityStatus == 'available' ? 'Online' : 'Offline';
+    final availColor = expert?.expertProfile?.availabilityStatus == 'available' ? const Color(0xFF4CAF50) : Colors.red;
+
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
@@ -135,7 +168,7 @@ class ExpertHomePage extends StatelessWidget {
                 ),
                 child: ClipOval(
                   child: Image.network(
-                    'https://randomuser.me/api/portraits/women/68.jpg',
+                    avatar,
                     fit: BoxFit.cover,
                     loadingBuilder: (ctx, child, p) {
                       if (p == null) return child;
@@ -175,7 +208,7 @@ class ExpertHomePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Dr. Isyana Chen',
+                      name,
                       style: GoogleFonts.outfit(
                         fontSize: 20,
                         color: Colors.white,
@@ -188,14 +221,14 @@ class ExpertHomePage extends StatelessWidget {
                         Container(
                           width: 7,
                           height: 7,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF4CAF50),
+                          decoration: BoxDecoration(
+                            color: availColor,
                             shape: BoxShape.circle,
                           ),
                         ),
                         const SizedBox(width: 5),
                         Text(
-                          'Online · Orchid Specialist',
+                          '$availStatus · $specialization',
                           style: GoogleFonts.outfit(
                             fontSize: 12,
                             color: Colors.white.withOpacity(0.85),
@@ -311,8 +344,17 @@ class ExpertHomePage extends StatelessWidget {
 
   // ── Activity Feed ─────────────────────────────────────────────────────────
   Widget _buildActivitySection(BuildContext context) {
-    final feed = _activityFeed();
-    final hasRequested = requestedConsults.isNotEmpty;
+
+    final consultationProvider = Provider.of<ConsultationProvider>(context);
+    final consultations = consultationProvider.expertConsultations;
+    final feed = consultations
+        .where((c) => c.status == 'waiting_verification' || c.status == 'active')
+        .map((c) => ModelConverter.consultationToExpertConsultItem(c))
+        .take(5)
+        .toList();
+
+    final requestedCount = consultations.where((c) => c.status == 'waiting_verification').length;
+    final hasRequested = requestedCount > 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -335,7 +377,7 @@ class ExpertHomePage extends StatelessWidget {
                     ),
                     if (hasRequested)
                       Text(
-                        '${requestedConsults.length} new request${requestedConsults.length > 1 ? 's' : ''} waiting',
+                        '$requestedCount new request${requestedCount > 1 ? 's' : ''} waiting',
                         style: GoogleFonts.outfit(
                           fontSize: 12,
                           color: Colors.orange.shade600,
@@ -349,8 +391,8 @@ class ExpertHomePage extends StatelessWidget {
                 behavior: HitTestBehavior.opaque,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => ExpertConsultPage()),
-                ),
+                  MaterialPageRoute(builder: (_) => const ExpertConsultPage()),
+                ).then((_) => setState(() {})),
                 child: Padding(
                   padding: const EdgeInsets.all(6),
                   child: Text(
@@ -411,7 +453,9 @@ class ExpertHomePage extends StatelessWidget {
   }
 
   Widget _buildActivityCard(BuildContext context, ExpertConsultItem item) {
-    final isRequested = requestedConsults.any((c) => c.id == item.id);
+    final provider = Provider.of<ConsultationProvider>(context, listen: false);
+    final c = provider.expertConsultations.firstWhere((x) => x.id.toString() == item.id);
+    final isRequested = c.status == 'waiting_verification';
 
     final Color badgeColor = isRequested ? Colors.orange : kExHomeMain;
     final Color badgeBg = isRequested
@@ -634,9 +678,14 @@ class ExpertHomePage extends StatelessWidget {
       ),
     );
   }
-
   // ── Articles Section ──────────────────────────────────────────────────────
   Widget _buildArticlesSection(BuildContext context) {
+    final articleProvider = Provider.of<ArticleProvider>(context);
+    final myArticles = articleProvider.myArticles;
+    final expert = Provider.of<AuthProvider>(context, listen: false).user;
+
+    final converted = myArticles.map((a) => ModelConverter.articleToExpertArticleItem(a, expert?.id)).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -657,8 +706,8 @@ class ExpertHomePage extends StatelessWidget {
                 behavior: HitTestBehavior.opaque,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => ExpertMyArticlePage()),
-                ),
+                  MaterialPageRoute(builder: (_) => const ExpertMyArticlePage()),
+                ).then((_) => setState(() {})),
                 child: Padding(
                   padding: const EdgeInsets.all(6),
                   child: Text(
@@ -675,39 +724,68 @@ class ExpertHomePage extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 220,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.only(left: 20, right: 6),
-            itemCount: _expertArticles.length,
-            physics: const BouncingScrollPhysics(),
-            itemBuilder: (ctx, i) =>
-                _buildArticleCard(context, _expertArticles[i]),
-          ),
-        ),
+        converted.isEmpty
+            ? Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.article_outlined,
+                        size: 36,
+                        color: Colors.grey.shade300,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No articles written yet',
+                        style: GoogleFonts.outfit(
+                          fontSize: 13,
+                          color: Colors.grey.shade400,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            : SizedBox(
+                height: 220,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.only(left: 20, right: 6),
+                  itemCount: converted.length,
+                  physics: const BouncingScrollPhysics(),
+                  itemBuilder: (ctx, i) =>
+                      _buildArticleCard(context, converted[i]),
+                ),
+              ),
       ],
     );
   }
 
-  Widget _buildArticleCard(BuildContext context, Map<String, dynamic> article) {
+  Widget _buildArticleCard(BuildContext context, ExpertArticleItem article) {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => ExpertDetailArtikelPage(
-            article: ExpertArticleItem(
-              id: article['title'] as String,
-              category: 'Ornamental Plants',
-              title: article['title'] as String,
-              author: 'Dr. Isyana Chen',
-              time: article['date'] as String,
-              imageUrl: article['image'] as String,
-              isMine: true,
-            ),
+            article: article,
           ),
         ),
-      ),
+      ).then((_) => setState(() {})),
       child: Container(
         width: 210,
         margin: const EdgeInsets.only(right: 14),
@@ -730,7 +808,7 @@ class ExpertHomePage extends StatelessWidget {
                 top: Radius.circular(16),
               ),
               child: Image.network(
-                article['image'] as String,
+                article.imageUrl,
                 height: 108,
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -768,7 +846,7 @@ class ExpertHomePage extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        article['title'] as String,
+                        article.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.outfit(
@@ -783,7 +861,7 @@ class ExpertHomePage extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          article['date'] as String,
+                          article.time,
                           style: GoogleFonts.outfit(
                             fontSize: 11,
                             color: Colors.grey.shade500,
@@ -797,7 +875,7 @@ class ExpertHomePage extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          article['views'] as String,
+                          '0',
                           style: GoogleFonts.outfit(
                             fontSize: 11,
                             color: Colors.grey.shade500,
@@ -814,6 +892,7 @@ class ExpertHomePage extends StatelessWidget {
       ),
     );
   }
+
 
   // ── Quick Actions ─────────────────────────────────────────────────────────
   Widget _buildQuickActions(BuildContext context) {

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../app_colors.dart';
 import '../../app_widgets.dart';
+import '../../services/auth_service.dart';
 import 'login_screen.dart';
 
 class SetNewPasswordScreen extends StatefulWidget {
-  const SetNewPasswordScreen({super.key});
+  final String email;
+  const SetNewPasswordScreen({super.key, required this.email});
 
   @override
   State<SetNewPasswordScreen> createState() => _SetNewPasswordScreenState();
@@ -14,6 +16,7 @@ class SetNewPasswordScreen extends StatefulWidget {
 class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
   final TextEditingController _passCtrl = TextEditingController();
   final TextEditingController _confirmCtrl = TextEditingController();
+  final AuthService _authService = AuthService();
 
   bool _passVisible = false;
   bool _confirmVisible = false;
@@ -43,7 +46,7 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
     super.dispose();
   }
 
-  void _handleSave() {
+  void _handleSave() async {
     setState(() {
       if (_confirmCtrl.text.isEmpty) {
         _confirmErr = 'Please confirm your password';
@@ -57,11 +60,26 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
     if (!_allMet || _confirmErr != null) return;
 
     setState(() => _isSaving = true);
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      if (!mounted) return;
-      setState(() => _isSaving = false);
+    
+    final result = await _authService.resetPassword(
+      widget.email,
+      '', // No token validation required on Laravel side
+      _passCtrl.text,
+    );
+
+    if (!mounted) return;
+    setState(() => _isSaving = false);
+
+    if (result['success']) {
       _showSuccessDialog();
-    });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Password reset failed'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 
   void _showSuccessDialog() {

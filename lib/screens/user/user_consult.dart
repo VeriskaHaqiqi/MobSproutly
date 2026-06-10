@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../providers/consultation_provider.dart';
+import '../../utils/model_converter.dart';
 import 'user_home.dart';
 import 'user_artikel.dart';
 import 'user_pencarian.dart';
 import 'user_chat.dart';
+import 'user_pembayaran.dart';
 import 'user_riwayat_consult.dart';
 import 'user_setting.dart';
 
@@ -40,100 +44,6 @@ class ConsultItem {
   });
 }
 
-// ─── Dummy Data ───────────────────────────────────────────────────────────────
-final List<ConsultItem> allConsults = [
-  ConsultItem(
-    id: '1',
-    expertName: 'Dr. Sarah Mitchell',
-    specialty: 'Soil Scientist',
-    lastMessage: 'Thanks for sharing the photos. I recommend...',
-    time: '10m ago',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=150&q=80',
-    isOnline: true,
-    isRead: false,
-    isActive: true,
-    topics: ['soil', 'monstera', 'photos', 'root', 'media tanam'],
-  ),
-  ConsultItem(
-    id: '2',
-    expertName: 'James Rodriguez',
-    specialty: 'Hydroponics Expert',
-    lastMessage: 'The drip system setup looks good, just...',
-    time: '2h ago',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80',
-    isOnline: true,
-    isRead: true,
-    isActive: true,
-    topics: ['hydroponics', 'drip system', 'lettuce', 'selada', 'nutrient'],
-  ),
-  ConsultItem(
-    id: '3',
-    expertName: 'Dr. Aisha Patel',
-    specialty: 'Pest Management',
-    lastMessage: "You're welcome! Let me know if you see...",
-    time: 'Yesterday',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&q=80',
-    isOnline: false,
-    isRead: true,
-    isActive: true,
-    topics: ['pest', 'aphid', 'tomato', 'tomat', 'chemical', 'spray'],
-  ),
-  ConsultItem(
-    id: '4',
-    expertName: 'Emily Chen',
-    specialty: 'Plant Pathologist',
-    lastMessage: 'Those leaf patterns indicate a nutrient...',
-    time: 'Mar 12',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80',
-    isOnline: false,
-    isRead: true,
-    isActive: true,
-    topics: ['leaf', 'nutrient', 'daun', 'calathea', 'yellowing', 'kuning'],
-  ),
-  ConsultItem(
-    id: '5',
-    expertName: 'Marcus Thompson',
-    specialty: 'Herbal Specialist',
-    lastMessage: 'Basil grows best with 6 hours of sunlight...',
-    time: 'Mar 10',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&q=80',
-    isOnline: false,
-    isRead: true,
-    isActive: false,
-    topics: ['basil', 'kemangi', 'herbal', 'sunlight', 'cahaya', 'mint'],
-  ),
-  ConsultItem(
-    id: '6',
-    expertName: 'Dr. Priya Sharma',
-    specialty: 'Soil Scientist',
-    lastMessage: 'Perfect! The pH levels are now balanced...',
-    time: 'Mar 8',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=150&q=80',
-    isOnline: false,
-    isRead: true,
-    isActive: false,
-    topics: ['ph', 'soil', 'tanah', 'strawberry', 'stroberi', 'acid'],
-  ),
-  ConsultItem(
-    id: '7',
-    expertName: 'Dr. Kevin Lim',
-    specialty: 'Fruit Tree Expert',
-    lastMessage: 'Your tabulampot mango is doing great...',
-    time: 'Mar 5',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&q=80',
-    isOnline: false,
-    isRead: true,
-    isActive: false,
-    topics: ['mango', 'mangga', 'tabulampot', 'fruit', 'buah', 'pot'],
-  ),
-];
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 class UserConsultScreen extends StatefulWidget {
@@ -153,6 +63,11 @@ class _UserConsultScreenState extends State<UserConsultScreen> {
   void initState() {
     super.initState();
     _searchCtrl.addListener(_onSearch);
+    
+    // Fetch active user consultations
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ConsultationProvider>(context, listen: false).fetchUserConsultations(refresh: true);
+    });
   }
 
   @override
@@ -167,8 +82,13 @@ class _UserConsultScreenState extends State<UserConsultScreen> {
   }
 
   List<ConsultItem> get _filtered {
-    final baseList = allConsults
-        .where((c) => _showActive ? c.isActive : !c.isActive)
+    final consultationProvider = Provider.of<ConsultationProvider>(context);
+    final userConsultations = consultationProvider.userConsultations;
+
+    // Convert and filter active consultations
+    final baseList = userConsultations
+        .where((c) => c.status != 'completed')
+        .map((c) => ModelConverter.consultationToConsultItem(c))
         .toList();
 
     if (_searchQuery.isEmpty) return baseList;
@@ -202,24 +122,33 @@ class _UserConsultScreenState extends State<UserConsultScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final consultationProvider = Provider.of<ConsultationProvider>(context);
+    final isLoading = consultationProvider.isLoading && consultationProvider.userConsultations.isEmpty;
+
     return Scaffold(
       backgroundColor: kConsultScaffold,
       body: Column(
         children: [
           _buildHeader(),
           Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                children: [
-                  const SizedBox(height: 16),
-                  _buildTabSwitcher(),
-                  const SizedBox(height: 12),
-                  _filtered.isEmpty ? _buildEmpty() : _buildList(),
-                  const SizedBox(height: 90),
-                ],
-              ),
-            ),
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator(color: kConsultMain))
+                : RefreshIndicator(
+                    onRefresh: () => consultationProvider.fetchUserConsultations(refresh: true),
+                    color: kConsultMain,
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 16),
+                          _buildTabSwitcher(),
+                          const SizedBox(height: 12),
+                          _filtered.isEmpty ? _buildEmpty() : _buildList(),
+                          const SizedBox(height: 90),
+                        ],
+                      ),
+                    ),
+                  ),
           ),
         ],
       ),
@@ -467,12 +396,29 @@ class _UserConsultScreenState extends State<UserConsultScreen> {
   Widget _buildConsultCard(ConsultItem consult) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => UserChatScreen(consult: consult),
-        ),
-      ),
+      onTap: () {
+        final provider = Provider.of<ConsultationProvider>(context, listen: false);
+        final c = provider.userConsultations.firstWhere((item) => item.id.toString() == consult.id);
+
+        if (c.status == 'waiting_payment' || c.status == 'rejected' || c.status == 'waiting_verification') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => UserPembayaranScreen(
+                expert: ModelConverter.userToExpertItem(c.expert!),
+                consultationId: c.id,
+              ),
+            ),
+          );
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => UserChatScreen(consult: consult),
+            ),
+          );
+        }
+      },
       child: Container(
         color: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),

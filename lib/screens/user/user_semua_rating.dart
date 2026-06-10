@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../providers/rating_provider.dart';
 import 'user_pencarian.dart';
 
 const Color kRatingTeal = Color(0xFF76EAD0);
@@ -20,24 +22,43 @@ class UserSemuaRatingScreen extends StatefulWidget {
 class UserSemuaRatingScreenState extends State<UserSemuaRatingScreen> {
   int filterStars = 0; // 0 = all
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<RatingProvider>(context, listen: false)
+          .fetchPublicRatings(int.parse(widget.expert.id), refresh: true);
+    });
+  }
+
+  List<ReviewItem> get allReviews {
+    final ratings = Provider.of<RatingProvider>(context).ratings;
+    return ratings.map((r) => ReviewItem(
+      name: r.user?.name ?? 'User',
+      avatarUrl: r.user?.photoUrl ?? '',
+      stars: r.score,
+      comment: r.comment ?? '',
+    )).toList();
+  }
+
   List<ReviewItem> get filteredReviews {
-    if (filterStars == 0) return widget.expert.reviews;
-    return widget.expert.reviews.where((r) => r.stars == filterStars).toList();
+    if (filterStars == 0) return allReviews;
+    return allReviews.where((r) => r.stars == filterStars).toList();
   }
 
   // Hitung distribusi bintang
   Map<int, int> get starDistribution {
     final map = <int, int>{5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
-    for (final r in widget.expert.reviews) {
+    for (final r in allReviews) {
       map[r.stars] = (map[r.stars] ?? 0) + 1;
     }
     return map;
   }
 
   double get averageRating {
-    if (widget.expert.reviews.isEmpty) return 0;
-    final total = widget.expert.reviews.fold(0, (sum, r) => sum + r.stars);
-    return total / widget.expert.reviews.length;
+    if (allReviews.isEmpty) return 0;
+    final total = allReviews.fold(0, (sum, r) => sum + r.stars);
+    return total / allReviews.length;
   }
 
   @override
@@ -120,7 +141,7 @@ class UserSemuaRatingScreenState extends State<UserSemuaRatingScreen> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  '${widget.expert.reviews.length} reviews',
+                  '${allReviews.length} reviews',
                   style: GoogleFonts.outfit(
                       fontSize: 12,
                       color: Colors.white,
@@ -137,7 +158,7 @@ class UserSemuaRatingScreenState extends State<UserSemuaRatingScreen> {
   // ── Summary Card ─────────────────────────────────────────────────────────
   Widget buildSummaryCard() {
     final dist = starDistribution;
-    final total = widget.expert.reviews.length;
+    final total = allReviews.length;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),

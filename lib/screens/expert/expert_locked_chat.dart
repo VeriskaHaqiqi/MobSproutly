@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
+import '../../providers/consultation_provider.dart';
 import 'expert_consult.dart';
 import 'expert_chat.dart';
 
@@ -321,10 +323,18 @@ class ExpertLockedChatPageState extends State<ExpertLockedChatPage> {
     );
   }
 
-  void _acceptConsultation() {
-    requestedConsults.removeWhere((c) => c.id == widget.consult.id);
-    activeConsults.insert(0, widget.consult);
+  void _acceptConsultation() async {
+    final provider = Provider.of<ConsultationProvider>(context, listen: false);
+    final success = await provider.verifyPayment(int.parse(widget.consult.id), true);
+    if (!success) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(provider.errorMessage ?? 'Failed to verify payment')),
+      );
+      return;
+    }
 
+    if (!mounted) return;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -502,6 +512,7 @@ class ExpertLockedChatPageState extends State<ExpertLockedChatPage> {
                   context,
                   MaterialPageRoute(
                     builder: (_) => ExpertChatPage(
+                      consultationId: widget.consult.id,
                       clientName: widget.consult.clientName,
                       clientAvatar: widget.consult.clientAvatar,
                       topic: widget.consult.topic,
@@ -776,9 +787,18 @@ class ExpertLockedChatPageState extends State<ExpertLockedChatPage> {
     );
   }
 
-  void _confirmReject(String reason) {
-    requestedConsults.removeWhere((c) => c.id == widget.consult.id);
+  void _confirmReject(String reason) async {
+    final provider = Provider.of<ConsultationProvider>(context, listen: false);
+    final success = await provider.verifyPayment(int.parse(widget.consult.id), false, rejectionNote: reason);
+    if (!success) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(provider.errorMessage ?? 'Failed to reject request')),
+      );
+      return;
+    }
 
+    if (!mounted) return;
     showDialog(
       context: context,
       barrierDismissible: false,

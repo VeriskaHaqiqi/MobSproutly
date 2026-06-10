@@ -5,6 +5,8 @@ import 'expert_home.dart' hide ExpertAccountPage;
 import 'expert_artikel.dart';
 import 'expert_consult.dart';
 import 'expert_setting.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 const Color kJadMain = Color(0xFF5DCFCF);
 const Color kJadTeal = Color(0xFF76EAD0);
@@ -75,39 +77,72 @@ class _ExpertSettingJadwalPageState extends State<ExpertSettingJadwalPage> {
   final List<int> durationOptions = [15, 30, 45, 60, 90, 120];
 
   late List<DaySchedule> schedule;
+  bool isLoadingSchedule = true;
 
   @override
   void initState() {
     super.initState();
 
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    selectedDuration = user?.expertProfile?.sessionDuration ?? 30;
+
+    // Initialize with all days inactive (empty defaults)
     schedule = [
-      DaySchedule(
-        day: 'Monday',
-        isActive: true,
-        slots: [
-          TimeSlot(startHour: 9, startMin: 0, endHour: 12, endMin: 0),
-          TimeSlot(startHour: 13, startMin: 0, endHour: 16, endMin: 0),
-        ],
-      ),
-      DaySchedule(
-        day: 'Tuesday',
-        isActive: true,
-        slots: [
-          TimeSlot(startHour: 10, startMin: 0, endHour: 15, endMin: 0),
-        ],
-      ),
-      DaySchedule(day: 'Wednesday', isActive: false),
-      DaySchedule(
-        day: 'Thursday',
-        isActive: true,
-        slots: [
-          TimeSlot(startHour: 14, startMin: 0, endHour: 18, endMin: 0),
-        ],
-      ),
-      DaySchedule(day: 'Friday', isActive: false),
-      DaySchedule(day: 'Saturday', isActive: true),
-      DaySchedule(day: 'Sunday', isActive: false),
+      DaySchedule(day: 'Monday'),
+      DaySchedule(day: 'Tuesday'),
+      DaySchedule(day: 'Wednesday'),
+      DaySchedule(day: 'Thursday'),
+      DaySchedule(day: 'Friday'),
+      DaySchedule(day: 'Saturday'),
+      DaySchedule(day: 'Sunday'),
     ];
+
+    // Load schedules from API
+    _loadSchedules();
+  }
+
+  Future<void> _loadSchedules() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final data = await auth.getSchedules();
+
+    if (data != null && data is List && mounted) {
+      setState(() {
+        for (var item in data) {
+          final day = item['day'] as String?;
+          if (day == null) continue;
+          final idx = schedule.indexWhere((d) => d.day == day);
+          if (idx == -1) continue;
+
+          final startTime = item['start_time']?.toString() ?? '09:00';
+          final endTime = item['end_time']?.toString() ?? '17:00';
+          final isActive = item['is_active'] == true || item['is_active'] == 1;
+
+          final startParts = startTime.split(':');
+          final endParts = endTime.split(':');
+
+          final slot = TimeSlot(
+            startHour: int.tryParse(startParts[0]) ?? 9,
+            startMin: int.tryParse(startParts.length > 1 ? startParts[1] : '0') ?? 0,
+            endHour: int.tryParse(endParts[0]) ?? 17,
+            endMin: int.tryParse(endParts.length > 1 ? endParts[1] : '0') ?? 0,
+          );
+
+          schedule[idx].isActive = isActive;
+          // Check if slot already exists to avoid duplicates
+          final alreadyHas = schedule[idx].slots.any((s) =>
+              s.startHour == slot.startHour &&
+              s.startMin == slot.startMin &&
+              s.endHour == slot.endHour &&
+              s.endMin == slot.endMin);
+          if (!alreadyHas) {
+            schedule[idx].slots.add(slot);
+          }
+        }
+        isLoadingSchedule = false;
+      });
+    } else if (mounted) {
+      setState(() => isLoadingSchedule = false);
+    }
   }
 
   List<TimeOfDay> _startTimes() {
@@ -437,14 +472,50 @@ class _ExpertSettingJadwalPageState extends State<ExpertSettingJadwalPage> {
     });
   }
 
-  void _handleSave() {
+  void _handleSave() async {
     setState(() => isSaving = true);
 
-    Future.delayed(const Duration(milliseconds: 900), () {
-      if (!mounted) return;
+    final auth = Provider.of<AuthProvider>(context, listen: false);
 
-      setState(() => isSaving = false);
+    // 1) Save session duration
+    final durationSuccess = await auth.updateExpertProfile(sessionDuration: selectedDuration);
 
+    // 2) Save schedule slots to API
+    final List<Map<String, dynamic>> apiSchedules = [];
+    for (var day in schedule) {
+      if (day.isActive) {
+        if (day.slots.isEmpty) {
+          // Active but no specific slots = full day (00:00 - 23:59)
+          apiSchedules.add({
+            'day': day.day,
+            'start_time': '00:00',
+            'end_time': '23:59',
+            'is_active': true,
+          });
+        } else {
+          for (var slot in day.slots) {
+            apiSchedules.add({
+              'day': day.day,
+              'start_time': '${slot.startHour.toString().padLeft(2, '0')}:${slot.startMin.toString().padLeft(2, '0')}',
+              'end_time': '${slot.endHour.toString().padLeft(2, '0')}:${slot.endMin.toString().padLeft(2, '0')}',
+              'is_active': true,
+            });
+          }
+        }
+      }
+    }
+
+    bool scheduleSuccess = true;
+    if (apiSchedules.isNotEmpty) {
+      scheduleSuccess = await auth.saveSchedules(apiSchedules);
+    }
+
+    final success = durationSuccess && scheduleSuccess;
+
+    if (!mounted) return;
+    setState(() => isSaving = false);
+
+    if (success) {
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -537,7 +608,13 @@ class _ExpertSettingJadwalPageState extends State<ExpertSettingJadwalPage> {
           ),
         ),
       );
-    });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(auth.errorMessage ?? 'Failed to update schedule.'),
+        ),
+      );
+    }
   }
 
   void onNavTapped(int index) {

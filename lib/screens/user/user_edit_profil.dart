@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../auth/login_screen.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 const Color kEditTeal = Color(0xFF76EAD0);
 const Color kEditBlue = Color(0xFF76D7EA);
@@ -11,15 +13,7 @@ const Color kEditMain = Color(0xFF5DCFCF);
 const Color kEditLGreen = Color(0xFFD0FF99);
 const Color kEditScaffold = Color(0xFFF0F4F3);
 
-// ─── Global User Profile State ────────────────────────────────────────────────
-// Shared state yang bisa dibaca dari user_setting.dart
-class UserProfile {
-  static String name = 'Sarah Johnson';
-  static String email = 'sarah.johnson@gmail.com';
-  static String phone = '+1 (555) 123-4567';
-  static String gender = 'Female';
-  static String? photoPath; // null = pakai network avatar default
-}
+
 
 class UserEditProfilScreen extends StatefulWidget {
   const UserEditProfilScreen({super.key});
@@ -43,6 +37,11 @@ class UserEditProfilScreenState extends State<UserEditProfilScreen> {
 
   final ImagePicker picker = ImagePicker();
 
+  bool get isNetworkPhoto =>
+      photoPath != null &&
+      photoPath!.isNotEmpty &&
+      (photoPath!.startsWith('http://') || photoPath!.startsWith('https://'));
+
   bool isValidGmail(String email) =>
       RegExp(r'^[\w\.-]+@gmail\.com$').hasMatch(email);
 
@@ -54,12 +53,11 @@ class UserEditProfilScreenState extends State<UserEditProfilScreen> {
   @override
   void initState() {
     super.initState();
-    // Load current profile values
-    nameCtrl.text = UserProfile.name;
-    emailCtrl.text = UserProfile.email;
-    phoneCtrl.text = UserProfile.phone;
-    selectedGender = UserProfile.gender;
-    photoPath = UserProfile.photoPath;
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    nameCtrl.text = user?.name ?? '';
+    emailCtrl.text = user?.email ?? '';
+    phoneCtrl.text = user?.phone ?? '';
+    selectedGender = (user?.gender == 'Male' || user?.gender == 'Female') ? user!.gender! : 'Female';
   }
 
   @override
@@ -115,18 +113,30 @@ class UserEditProfilScreenState extends State<UserEditProfilScreen> {
                 pickFromCamera();
               },
             ),
-            if (photoPath != null) ...[
-              const SizedBox(height: 10),
+            const SizedBox(height: 10),
               buildSheetOption(
                 icon: Icons.delete_outline_rounded,
                 label: 'Remove Photo',
                 color: Colors.redAccent,
-                onTap: () {
+                onTap: () async {
                   Navigator.pop(ctx);
                   setState(() => photoPath = null);
+                  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                  final deleted = await authProvider.deletePhoto();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(deleted ? 'Photo removed' : 'Failed to remove photo',
+                            style: GoogleFonts.outfit(fontSize: 13)),
+                        backgroundColor: deleted ? kEditMain : Colors.redAccent,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  }
                 },
               ),
-            ],
           ],
         ),
       ),
@@ -204,31 +214,50 @@ class UserEditProfilScreenState extends State<UserEditProfilScreen> {
 
     setState(() => isSaving = true);
 
-    Future.delayed(const Duration(milliseconds: 800), () {
+    Future.delayed(const Duration(milliseconds: 800), () async {
       if (!mounted) return;
 
-      // Commit to global state
-      UserProfile.name = nameCtrl.text.trim();
-      UserProfile.email = emailCtrl.text.trim();
-      UserProfile.phone = phoneCtrl.text.trim();
-      UserProfile.gender = selectedGender;
-      UserProfile.photoPath = photoPath;
-
-      setState(() => isSaving = false);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Profile updated successfully!',
-              style: GoogleFonts.outfit(fontSize: 13)),
-          backgroundColor: kEditMain,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          duration: const Duration(seconds: 2),
-        ),
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final success = await authProvider.updateProfile(
+        name: nameCtrl.text.trim(),
+        phone: phoneCtrl.text.trim(),
+        gender: selectedGender,
       );
 
-      Navigator.pop(context);
+      // Handle photo: upload new local file, or skip if network URL (unchanged)
+      if (success && photoPath != null && !isNetworkPhoto) {
+        await authProvider.uploadPhoto(photoPath!);
+      }
+
+      if (!mounted) return;
+      setState(() => isSaving = false);
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Profile updated successfully!',
+                style: GoogleFonts.outfit(fontSize: 13)),
+            backgroundColor: kEditMain,
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update profile.',
+                style: GoogleFonts.outfit(fontSize: 13)),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     });
   }
 
@@ -423,6 +452,7 @@ class UserEditProfilScreenState extends State<UserEditProfilScreen> {
 
   // ── Avatar Section ────────────────────────────────────────────────────────
   Widget buildAvatarSection() {
+    final user = Provider.of<AuthProvider>(context).user;
     return Center(
       child: Column(
         children: [
@@ -444,28 +474,26 @@ class UserEditProfilScreenState extends State<UserEditProfilScreen> {
                 ),
                 child: ClipOval(
                   child: photoPath != null
-                      ? Image.file(File(photoPath!),
-                          fit: BoxFit.cover, width: 100, height: 100)
+                      ? (isNetworkPhoto
+                          ? Image.network(photoPath!,
+                              fit: BoxFit.cover, width: 100, height: 100,
+                              errorBuilder: (ctx, err, stack) => Container(
+                                color: kEditTeal.withOpacity(0.2),
+                                child: const Icon(Icons.person, color: kEditMain, size: 40),
+                              ))
+                          : Image.file(File(photoPath!),
+                              fit: BoxFit.cover, width: 100, height: 100))
                       : Image.network(
-                          'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=200&q=80',
+                          user?.photoUrl ?? 'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=200&q=80',
                           fit: BoxFit.cover,
                           width: 100,
                           height: 100,
-                          loadingBuilder: (ctx, child, p) {
-                            if (p == null) return child;
+                          errorBuilder: (ctx, err, stack) {
                             return Container(
                               color: kEditTeal.withOpacity(0.2),
-                              child: const Center(
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: kEditMain),
-                              ),
+                              child: const Icon(Icons.person, color: kEditMain, size: 40),
                             );
                           },
-                          errorBuilder: (ctx, e, s) => Container(
-                            color: kEditTeal.withOpacity(0.2),
-                            child: const Icon(Icons.person_rounded,
-                                color: kEditMain, size: 44),
-                          ),
                         ),
                 ),
               ),
@@ -514,7 +542,23 @@ class UserEditProfilScreenState extends State<UserEditProfilScreen> {
               ),
               const SizedBox(width: 10),
               GestureDetector(
-                onTap: () => setState(() => photoPath = null),
+                onTap: () async {
+                  setState(() => photoPath = null);
+                  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                  final deleted = await authProvider.deletePhoto();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(deleted ? 'Photo removed' : 'Failed to remove photo',
+                            style: GoogleFonts.outfit(fontSize: 13)),
+                        backgroundColor: deleted ? kEditMain : Colors.redAccent,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                },
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 9),

@@ -2,8 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
-import 'expert_setting.dart' show ExpertProfile;
+import '../../providers/auth_provider.dart';
 
 const Color kExEditMain = Color(0xFF5DCFCF);
 const Color kExEditTeal = Color(0xFF76EAD0);
@@ -25,6 +26,10 @@ class _ExpertEditProfilPageState extends State<ExpertEditProfilPage> {
   late final TextEditingController _emailCtrl;
   late final TextEditingController _phoneCtrl;
   late final TextEditingController _customSpecializationCtrl;
+
+  late final TextEditingController _universityCtrl;
+  late final TextEditingController _yearsOfExpCtrl;
+  late final TextEditingController _descriptionCtrl;
 
   late String _gender;
   late String _category;
@@ -80,34 +85,43 @@ class _ExpertEditProfilPageState extends State<ExpertEditProfilPage> {
   void initState() {
     super.initState();
 
-    _nameCtrl = TextEditingController(text: ExpertProfile.name);
-    _emailCtrl = TextEditingController(text: ExpertProfile.email);
-    _phoneCtrl = TextEditingController(text: ExpertProfile.phone);
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+
+    _nameCtrl = TextEditingController(text: user?.name ?? '');
+    _emailCtrl = TextEditingController(text: user?.email ?? '');
+    _phoneCtrl = TextEditingController(text: user?.phone ?? '');
     _customSpecializationCtrl = TextEditingController();
 
-    _gender = _normalizeGender(ExpertProfile.gender);
-    _category = ExpertProfile.category;
-    _photoPath = ExpertProfile.photoPath;
+    _universityCtrl = TextEditingController(text: user?.expertProfile?.university ?? '');
+    _yearsOfExpCtrl = TextEditingController(text: (user?.expertProfile?.yearsOfExperience ?? 0).toString());
+    _descriptionCtrl = TextEditingController(text: user?.expertProfile?.description ?? '');
+
+    _gender = _normalizeGender(user?.gender ?? 'Female');
+    _category = user?.expertProfile?.description ?? _specializationOptions.keys.first;
+    _photoPath = user?.photoUrl;
 
     if (!_specializationOptions.containsKey(_category)) {
       _category = _specializationOptions.keys.first;
     }
 
-    _selectedSpecializations = List<String>.from(
-      ExpertProfile.specializations,
-    );
+    _selectedSpecializations = user?.specializations
+            ?.map((s) => s.name)
+            .toList() ??
+        [];
 
     if (_selectedSpecializations.isEmpty) {
       _selectedSpecializations = ['Orchid Specialist'];
     }
   }
 
-  @override
   void dispose() {
     _nameCtrl.dispose();
     _emailCtrl.dispose();
     _phoneCtrl.dispose();
     _customSpecializationCtrl.dispose();
+    _universityCtrl.dispose();
+    _yearsOfExpCtrl.dispose();
+    _descriptionCtrl.dispose();
     super.dispose();
   }
 
@@ -147,6 +161,28 @@ class _ExpertEditProfilPageState extends State<ExpertEditProfilPage> {
     setState(() {
       _photoPath = null;
     });
+  }
+
+  void _uploadDocument(bool isDiploma) async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (pickedFile == null) return;
+    
+    if (!mounted) return;
+    showDialog(
+      context: context, 
+      barrierDismissible: false, 
+      builder: (_) => const Center(child: CircularProgressIndicator())
+    );
+    
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final success = await auth.uploadCertificate(filePath: pickedFile.path, isDiploma: isDiploma);
+    
+    if (!mounted) return;
+    Navigator.pop(context); // close loading dialog
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(success ? 'Document uploaded successfully' : 'Failed to upload document')),
+    );
   }
 
   void _toggleSpecialization(String value) {
@@ -206,7 +242,7 @@ class _ExpertEditProfilPageState extends State<ExpertEditProfilPage> {
     );
   }
 
-  void _saveProfile() {
+  void _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedSpecializations.isEmpty) {
@@ -218,23 +254,47 @@ class _ExpertEditProfilPageState extends State<ExpertEditProfilPage> {
       return;
     }
 
-    ExpertProfile.name = _nameCtrl.text.trim();
-    ExpertProfile.email = _emailCtrl.text.trim().toLowerCase();
-    ExpertProfile.phone = _phoneCtrl.text.trim();
-    ExpertProfile.gender = _gender;
-    ExpertProfile.category = _category;
-    ExpertProfile.photoPath = _photoPath;
-    ExpertProfile.specializations = List<String>.from(
-      _selectedSpecializations,
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+
+    // Update basic user profile via API
+    final success = await auth.updateProfile(
+      name: _nameCtrl.text.trim(),
+      phone: _phoneCtrl.text.trim(),
+      gender: _gender,
     );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profile updated successfully.'),
-      ),
+    // Also update expert category and specializations if possible
+    await auth.updateExpertProfile(
+      university: _universityCtrl.text.trim(),
+      yearsOfExperience: int.tryParse(_yearsOfExpCtrl.text.trim()) ?? 0,
+      description: _descriptionCtrl.text.trim().isNotEmpty ? _descriptionCtrl.text.trim() : _category,
     );
 
-    Navigator.pop(context);
+    if (success) {
+      // Handle photo changes
+      if (_photoPath == null) {
+        await auth.deletePhoto();
+      } else if (!_isNetworkPhoto) {
+        await auth.uploadPhoto(_photoPath!);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile updated successfully.'),
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(auth.errorMessage ?? 'Failed to update profile.'),
+          ),
+        );
+      }
+    }
   }
 
   BoxDecoration _cardDecoration() {
@@ -369,6 +429,11 @@ class _ExpertEditProfilPageState extends State<ExpertEditProfilPage> {
     );
   }
 
+  bool get _isNetworkPhoto =>
+      _photoPath != null &&
+      _photoPath!.isNotEmpty &&
+      (_photoPath!.startsWith('http://') || _photoPath!.startsWith('https://'));
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -389,6 +454,8 @@ class _ExpertEditProfilPageState extends State<ExpertEditProfilPage> {
                     _buildBasicInfoCard(),
                     const SizedBox(height: 18),
                     _buildSpecializationCard(),
+                    const SizedBox(height: 18),
+                    _buildDocumentsCard(),
                     const SizedBox(height: 24),
                     _buildSaveButton(),
                   ],
@@ -464,11 +531,17 @@ class _ExpertEditProfilPageState extends State<ExpertEditProfilPage> {
             ),
             child: ClipOval(
               child: _photoPath != null && _photoPath!.isNotEmpty
-                  ? Image.file(
-                      File(_photoPath!),
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _emptyAccountAvatar(),
-                    )
+                  ? (_isNetworkPhoto
+                      ? Image.network(
+                          _photoPath!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _emptyAccountAvatar(),
+                        )
+                      : Image.file(
+                          File(_photoPath!),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _emptyAccountAvatar(),
+                        ))
                   : _emptyAccountAvatar(),
             ),
           ),
@@ -635,6 +708,33 @@ class _ExpertEditProfilPageState extends State<ExpertEditProfilPage> {
               color: Colors.black87,
             ),
             icon: const Icon(Icons.keyboard_arrow_down_rounded),
+          ),
+          const SizedBox(height: 12),
+          _inputField(
+            label: 'University',
+            controller: _universityCtrl,
+            hint: 'Enter your university',
+          ),
+          const SizedBox(height: 12),
+          _inputField(
+            label: 'Years of Experience',
+            controller: _yearsOfExpCtrl,
+            hint: 'e.g. 5',
+            keyboardType: TextInputType.number,
+            validator: (value) {
+              if (value != null && value.isNotEmpty) {
+                if (int.tryParse(value) == null) {
+                  return 'Must be a valid number';
+                }
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+          _inputField(
+            label: 'Profile Description',
+            controller: _descriptionCtrl,
+            hint: 'Tell us about your expertise',
           ),
         ],
       ),
@@ -832,6 +932,61 @@ class _ExpertEditProfilPageState extends State<ExpertEditProfilPage> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDocumentsCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: _cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionTitle('Professional Documents'),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => _uploadDocument(false),
+                  icon: const Icon(Icons.file_upload, size: 18),
+                  label: const Text('Certificate', style: TextStyle(fontSize: 12)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kExEditMain,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => _uploadDocument(true),
+                  icon: const Icon(Icons.file_upload, size: 18),
+                  label: const Text('Diploma', style: TextStyle(fontSize: 12)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kExEditMain,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Upload a photo or scanned copy of your professional certificate and diploma. This will be verified by the admin.',
+            style: GoogleFonts.outfit(
+              fontSize: 12,
+              color: Colors.grey.shade500,
+              height: 1.4,
             ),
           ),
         ],

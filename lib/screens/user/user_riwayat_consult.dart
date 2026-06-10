@@ -6,6 +6,11 @@ import 'user_consult.dart';
 import 'user_setting.dart';
 import 'user_pencarian.dart';
 import 'user_chat_locked.dart';
+import 'package:provider/provider.dart';
+import '../../providers/consultation_provider.dart';
+import '../../providers/rating_provider.dart';
+import '../../utils/model_converter.dart';
+import '../../models/user_model.dart';
 
 const Color kRiwayatTeal = Color(0xFF76EAD0);
 const Color kRiwayatBlue = Color(0xFF76D7EA);
@@ -50,215 +55,6 @@ class HistoryMessage {
   });
 }
 
-// ─── Dummy Data ───────────────────────────────────────────────────────────────
-final List<CompletedConsultItem> completedConsults = [
-  CompletedConsultItem(
-    id: '1',
-    expertName: 'Dr. Sarah Mitchell',
-    specialty: 'Orchid Specialist',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=150&q=80',
-    rating: 5.0,
-    topic: 'Orchid root care discussion',
-    date: 'Dec 18, 2024',
-    price: 45.00,
-    messages: [
-      HistoryMessage(
-          text:
-              'Hi! I need help with my orchid roots — they look brown and mushy.',
-          isMe: true,
-          time: '10:00 AM'),
-      HistoryMessage(
-          text:
-              'Thank you for reaching out! Brown mushy roots usually indicate root rot from overwatering. Can you send me a photo?',
-          isMe: false,
-          time: '10:02 AM'),
-      HistoryMessage(
-          text: 'Here\'s the photo — you can see the damage clearly.',
-          isMe: true,
-          time: '10:05 AM'),
-      HistoryMessage(
-          text:
-              'Yes, this is definitely root rot. I recommend removing all affected roots with sterilized scissors, then repotting in fresh orchid bark. Let the roots dry for 30 minutes before repotting.',
-          isMe: false,
-          time: '10:08 AM'),
-      HistoryMessage(
-          text: 'Should I use any fungicide?', isMe: true, time: '10:10 AM'),
-      HistoryMessage(
-          text:
-              'Yes! Apply a diluted cinnamon powder or a commercial orchid fungicide on the cut ends before repotting. This prevents further infection. Water only once the bark is completely dry.',
-          isMe: false,
-          time: '10:12 AM'),
-      HistoryMessage(
-          text: 'Thank you so much! This is really helpful.',
-          isMe: true,
-          time: '10:15 AM'),
-      HistoryMessage(
-          text:
-              'You\'re welcome! Your orchid should recover well. Feel free to reach out if you notice any new symptoms. Good luck!',
-          isMe: false,
-          time: '10:16 AM'),
-    ],
-  ),
-  CompletedConsultItem(
-    id: '2',
-    expertName: 'Mark Thompson',
-    specialty: 'Tomato Specialist',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80',
-    rating: 4.0,
-    topic: 'Tomato fungus issue',
-    date: 'Dec 12, 2024',
-    price: 38.00,
-    messages: [
-      HistoryMessage(
-          text: 'My tomato leaves have white powdery spots. What could it be?',
-          isMe: true,
-          time: '2:00 PM'),
-      HistoryMessage(
-          text:
-              'That sounds like powdery mildew, a common fungal disease. Is the weather humid where you are?',
-          isMe: false,
-          time: '2:03 PM'),
-      HistoryMessage(
-          text: 'Yes, it\'s been very humid lately.',
-          isMe: true,
-          time: '2:05 PM'),
-      HistoryMessage(
-          text:
-              'That confirms it. Mix 1 tablespoon of baking soda with 1 liter of water and spray the affected leaves. Repeat every 3 days for 2 weeks. Also improve air circulation around the plant.',
-          isMe: false,
-          time: '2:07 PM'),
-      HistoryMessage(
-          text: 'Can I still eat the tomatoes?', isMe: true, time: '2:09 PM'),
-      HistoryMessage(
-          text:
-              'The fruits are safe to eat as long as they look healthy. Remove any severely infected leaves and dispose of them away from your garden.',
-          isMe: false,
-          time: '2:11 PM'),
-    ],
-  ),
-  CompletedConsultItem(
-    id: '3',
-    expertName: 'Dr. Emily Chen',
-    specialty: 'Plant Disease Expert',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80',
-    rating: null, // Not reviewed
-    topic: 'Leaf yellowing consultation',
-    date: 'Dec 5, 2024',
-    price: 42.00,
-    messages: [
-      HistoryMessage(
-          text: 'My calathea leaves are turning yellow from the edges. Help!',
-          isMe: true,
-          time: '3:30 PM'),
-      HistoryMessage(
-          text:
-              'Edge yellowing on calathea usually points to fluoride toxicity or inconsistent watering. Do you use tap water directly?',
-          isMe: false,
-          time: '3:33 PM'),
-      HistoryMessage(
-          text: 'Yes, I just use tap water from the sink.',
-          isMe: true,
-          time: '3:35 PM'),
-      HistoryMessage(
-          text:
-              'That\'s likely the cause. Calathea is very sensitive to fluoride and chlorine in tap water. Switch to filtered water or leave tap water out overnight before using it. Also ensure the pot has proper drainage.',
-          isMe: false,
-          time: '3:38 PM'),
-      HistoryMessage(
-          text: 'How often should I water it?', isMe: true, time: '3:40 PM'),
-      HistoryMessage(
-          text:
-              'Keep the soil consistently moist but never soggy. Typically every 5-7 days in warm weather, less in winter. Always check the top inch of soil before watering.',
-          isMe: false,
-          time: '3:42 PM'),
-    ],
-  ),
-  CompletedConsultItem(
-    id: '4',
-    expertName: 'James Rodriguez',
-    specialty: 'Hydroponic Expert',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&q=80',
-    rating: 5.0,
-    topic: 'Hydroponic setup guidance',
-    date: 'Nov 28, 2024',
-    price: 50.00,
-    messages: [
-      HistoryMessage(
-          text:
-              'I want to start a hydroponic system at home for lettuce. Where do I begin?',
-          isMe: true,
-          time: '9:00 AM'),
-      HistoryMessage(
-          text:
-              'Great choice! For beginners, I recommend a simple Deep Water Culture (DWC) setup. You\'ll need a reservoir, an air pump, net pots, and nutrient solution.',
-          isMe: false,
-          time: '9:03 AM'),
-      HistoryMessage(
-          text: 'What nutrients do I need exactly?',
-          isMe: true,
-          time: '9:05 AM'),
-      HistoryMessage(
-          text:
-              'For lettuce, use a balanced hydroponic nutrient solution with an EC of 0.8-1.2 and pH between 6.0-6.5. I recommend General Hydroponics Flora Series for beginners.',
-          isMe: false,
-          time: '9:08 AM'),
-      HistoryMessage(
-          text: 'How much light does lettuce need?',
-          isMe: true,
-          time: '9:10 AM'),
-      HistoryMessage(
-          text:
-              '14-16 hours of light per day works best. A 4000K LED grow light placed 30cm above the plants is ideal. Your lettuce should be ready to harvest in 30-45 days!',
-          isMe: false,
-          time: '9:12 AM'),
-    ],
-  ),
-  CompletedConsultItem(
-    id: '5',
-    expertName: 'Lisa Anderson',
-    specialty: 'Botanist',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&q=80',
-    rating: 4.5,
-    topic: 'Indoor plant selection advice',
-    date: 'Nov 20, 2024',
-    price: 35.00,
-    messages: [
-      HistoryMessage(
-          text:
-              'I want to add more plants to my apartment but I have low light conditions. Any suggestions?',
-          isMe: true,
-          time: '11:00 AM'),
-      HistoryMessage(
-          text:
-              'Perfect! Low light plants are my specialty. ZZ plants, pothos, snake plants, and peace lilies are all excellent choices for dim apartments.',
-          isMe: false,
-          time: '11:02 AM'),
-      HistoryMessage(
-          text: 'Which one is easiest to maintain?',
-          isMe: true,
-          time: '11:04 AM'),
-      HistoryMessage(
-          text:
-              'The ZZ plant is virtually indestructible. It tolerates neglect, infrequent watering, and very low light. Perfect for busy plant parents. Pothos is a close second.',
-          isMe: false,
-          time: '11:06 AM'),
-      HistoryMessage(
-          text: 'How about air purifying plants?',
-          isMe: true,
-          time: '11:08 AM'),
-      HistoryMessage(
-          text:
-              'Snake plant (Sansevieria) is one of the best air purifiers and thrives in low light. Peace lily also purifies air and even blooms occasionally indoors. Both are great choices!',
-          isMe: false,
-          time: '11:10 AM'),
-    ],
-  ),
-];
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 class UserRiwayatConsultScreen extends StatefulWidget {
@@ -280,6 +76,9 @@ class UserRiwayatConsultScreenState extends State<UserRiwayatConsultScreen> {
     searchCtrl.addListener(() {
       setState(() => searchQuery = searchCtrl.text.trim().toLowerCase());
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ConsultationProvider>(context, listen: false).fetchUserConsultations(refresh: true);
+    });
   }
 
   @override
@@ -288,9 +87,33 @@ class UserRiwayatConsultScreenState extends State<UserRiwayatConsultScreen> {
     super.dispose();
   }
 
+  String _monthName(int month) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months[month - 1];
+  }
+
   List<CompletedConsultItem> get filtered {
-    if (searchQuery.isEmpty) return completedConsults;
-    return completedConsults.where((c) {
+    final provider = Provider.of<ConsultationProvider>(context);
+    final completed = provider.userConsultations.where((c) => c.status == 'completed').toList();
+    
+    final items = completed.map((c) {
+      final expert = c.expert;
+      final avatar = expert != null ? ModelConverter.getUserAvatar(expert) : 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80';
+      return CompletedConsultItem(
+        id: c.id.toString(),
+        expertName: expert?.name ?? 'Expert',
+        specialty: (expert?.specializations != null && expert!.specializations!.isNotEmpty) ? expert.specializations!.first.name : 'Botanist',
+        avatarUrl: avatar,
+        rating: c.rating?.score.toDouble(),
+        topic: c.topic ?? 'Plant Consultation',
+        date: c.createdAt != null ? '${_monthName(c.createdAt!.month)} ${c.createdAt!.day}, ${c.createdAt!.year}' : 'Recently',
+        price: c.fee,
+        messages: [], // Chat messages to be fetched dynamically
+      );
+    }).toList();
+
+    if (searchQuery.isEmpty) return items;
+    return items.where((c) {
       return c.expertName.toLowerCase().contains(searchQuery) ||
           c.specialty.toLowerCase().contains(searchQuery) ||
           c.topic.toLowerCase().contains(searchQuery);
@@ -723,23 +546,18 @@ class UserRiwayatConsultScreenState extends State<UserRiwayatConsultScreen> {
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
-                      // Find matching expert from allExperts
-                      ExpertItem? expert;
-                      try {
-                        expert = allExperts.firstWhere(
-                          (e) => e.name.toLowerCase().contains(
-                              item.expertName.split(' ').last.toLowerCase()),
-                        );
-                      } catch (_) {
-                        expert =
-                            allExperts.isNotEmpty ? allExperts.first : null;
-                      }
-                      if (expert != null) {
+                      final consultation = Provider.of<ConsultationProvider>(context, listen: false)
+                          .userConsultations
+                          .firstWhere((c) => c.id.toString() == item.id);
+                      final User? rawExpert = consultation.expert;
+                      
+                      if (rawExpert != null) {
+                        final expertItem = ModelConverter.userToExpertItem(rawExpert);
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (ctx) =>
-                                UserChatLockedScreen(expert: expert!),
+                                UserChatLockedScreen(expert: expertItem),
                           ),
                         );
                       }
@@ -1106,26 +924,29 @@ class UserRiwayatConsultScreenState extends State<UserRiwayatConsultScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: selectedStars > 0
-                        ? () {
-                            setState(() {
-                              // Update rating in list
-                              final idx = completedConsults
-                                  .indexWhere((c) => c.id == item.id);
-                              if (idx != -1) {
-                                completedConsults[idx] = CompletedConsultItem(
-                                  id: item.id,
-                                  expertName: item.expertName,
-                                  specialty: item.specialty,
-                                  avatarUrl: item.avatarUrl,
-                                  rating: selectedStars.toDouble(),
-                                  topic: item.topic,
-                                  date: item.date,
-                                  price: item.price,
-                                  messages: item.messages,
-                                );
-                              }
-                            });
+                        ? () async {
                             Navigator.pop(ctx);
+                            final success = await Provider.of<RatingProvider>(context, listen: false).submitRating(
+                              consultationId: int.parse(item.id),
+                              score: selectedStars,
+                            );
+                            if (success && mounted) {
+                              Provider.of<ConsultationProvider>(context, listen: false).fetchUserConsultations(refresh: true);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Rating submitted successfully!'),
+                                  backgroundColor: kRiwayatMain,
+                                ),
+                              );
+                            } else if (mounted) {
+                              final err = Provider.of<RatingProvider>(context, listen: false).errorMessage ?? 'Failed to submit rating';
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(err),
+                                  backgroundColor: Colors.redAccent,
+                                ),
+                              );
+                            }
                           }
                         : null,
                     style: ElevatedButton.styleFrom(

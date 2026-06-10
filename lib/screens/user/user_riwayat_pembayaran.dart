@@ -7,6 +7,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+import 'package:provider/provider.dart';
+import '../../providers/consultation_provider.dart';
 import 'user_home.dart';
 import 'user_artikel.dart';
 import 'user_consult.dart';
@@ -51,160 +53,6 @@ class PaymentItem {
   double get total => amount + platformFee;
 }
 
-final List<PaymentItem> allPayments = [
-  PaymentItem(
-    id: '1',
-    expertName: 'Dr. Sarah Chen',
-    specialty: 'Soil Scientist',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=150&q=80',
-    topic: 'Nitrogen Analysis',
-    consultType: 'Video Consultation',
-    amount: 82000,
-    platformFee: 2500,
-    date: 'Dec 15, 2024',
-    invoiceNumber: 'INV-2024-001',
-  ),
-  PaymentItem(
-    id: '2',
-    expertName: 'Mark Rodriguez',
-    specialty: 'Crop Rotation Expert',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80',
-    topic: 'Plant Rotation Plan',
-    consultType: 'Chat Consultation',
-    amount: 62000,
-    platformFee: 2500,
-    date: 'Dec 12, 2024',
-    invoiceNumber: 'INV-2024-002',
-  ),
-  PaymentItem(
-    id: '3',
-    expertName: 'Dr. Emily Watson',
-    specialty: 'Pest Control Specialist',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80',
-    topic: 'Pest Strategy',
-    consultType: 'Video Consultation',
-    amount: 117000,
-    platformFee: 2500,
-    date: 'Dec 8, 2024',
-    invoiceNumber: 'INV-2024-003',
-  ),
-  PaymentItem(
-    id: '4',
-    expertName: 'James Park',
-    specialty: 'Irrigation Analyst',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&q=80',
-    topic: 'Irrigation Audit',
-    consultType: 'Video Consultation',
-    amount: 92000,
-    platformFee: 2500,
-    date: 'Dec 5, 2024',
-    invoiceNumber: 'INV-2024-004',
-  ),
-  PaymentItem(
-    id: '5',
-    expertName: 'Dr. Lisa Kim',
-    specialty: 'Plant Nutritionist',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&q=80',
-    topic: 'Nutrient Deficiency Analysis',
-    consultType: 'Chat Consultation',
-    amount: 72000,
-    platformFee: 2500,
-    date: 'Nov 28, 2024',
-    invoiceNumber: 'INV-2024-005',
-  ),
-  PaymentItem(
-    id: '6',
-    expertName: 'Dr. Sarah Mitchell',
-    specialty: 'Orchid Specialist',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=150&q=80',
-    topic: 'Orchid Root Care',
-    consultType: 'Chat Consultation',
-    amount: 42000,
-    platformFee: 2500,
-    date: 'Nov 20, 2024',
-    invoiceNumber: 'INV-2024-006',
-  ),
-  PaymentItem(
-    id: '7',
-    expertName: 'Dr. Aisha Patel',
-    specialty: 'Horticulture Expert',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&q=80',
-    topic: 'Tabulampot Mango Care',
-    consultType: 'Video Consultation',
-    amount: 52000,
-    platformFee: 2500,
-    date: 'Nov 15, 2024',
-    invoiceNumber: 'INV-2024-007',
-  ),
-  PaymentItem(
-    id: '8',
-    expertName: 'Dr. Priya Sharma',
-    specialty: 'Herbal Specialist',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=150&q=80',
-    topic: 'Herb Garden Setup',
-    consultType: 'Chat Consultation',
-    amount: 45000,
-    platformFee: 2500,
-    date: 'Nov 10, 2024',
-    invoiceNumber: 'INV-2024-008',
-  ),
-  PaymentItem(
-    id: '9',
-    expertName: 'Dr. James Wilson',
-    specialty: 'Agronomist',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&q=80',
-    topic: 'Corn Crop Analysis',
-    consultType: 'Video Consultation',
-    amount: 70000,
-    platformFee: 2500,
-    date: 'Nov 5, 2024',
-    invoiceNumber: 'INV-2024-009',
-    status: PaymentStatus.cancelled,
-    cancelReason:
-        'Expert cancelled the session due to a scheduling conflict. Your payment has been fully refunded.',
-  ),
-  PaymentItem(
-    id: '10',
-    expertName: 'Kevin Lim',
-    specialty: 'Fruit Tree Expert',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&q=80',
-    topic: 'Dragon Fruit Growth',
-    consultType: 'Chat Consultation',
-    amount: 38000,
-    platformFee: 2500,
-    date: 'Oct 28, 2024',
-    invoiceNumber: 'INV-2024-010',
-    status: PaymentStatus.refunded,
-    cancelReason:
-        'Session could not be completed due to a technical issue on our platform. A full refund has been processed.',
-  ),
-  PaymentItem(
-    id: '11',
-    expertName: 'Dr. Emily Watson',
-    specialty: 'Pest Control Specialist',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80',
-    topic: 'Organic Pest Treatment',
-    consultType: 'Video Consultation',
-    amount: 90000,
-    platformFee: 2500,
-    date: 'Oct 20, 2024',
-    invoiceNumber: 'INV-2024-011',
-    status: PaymentStatus.cancelled,
-    cancelReason:
-        'User requested cancellation within the allowed 30-minute cancellation window.',
-  ),
-];
 
 String formatRupiah(double value) {
   final number = value.round().toString();
@@ -736,9 +584,52 @@ class UserRiwayatPembayaranScreenState
     }
   }
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ConsultationProvider>(context, listen: false).fetchUserConsultations(refresh: true);
+    });
+  }
+
+  List<PaymentItem> get _allPayments {
+    final provider = Provider.of<ConsultationProvider>(context);
+    final consults = provider.userConsultations.where((c) => c.payment != null).toList();
+
+    return consults.map((c) {
+      PaymentStatus st = PaymentStatus.paid;
+      if (c.payment!.status == 'refunded') st = PaymentStatus.refunded;
+      if (c.payment!.status == 'rejected' || c.status == 'rejected') st = PaymentStatus.cancelled;
+
+      final expert = c.expert;
+      final avatar = (expert != null && expert.photoUrl != null) ? expert.photoUrl! : 'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=150&q=80';
+      
+      String dateStr = 'Recently';
+      if (c.payment!.createdAt != null) {
+        final d = c.payment!.createdAt!;
+        dateStr = '${d.day}/${d.month}/${d.year}';
+      }
+
+      return PaymentItem(
+        id: c.payment!.id.toString(),
+        expertName: expert?.name ?? 'Expert',
+        specialty: (expert?.specializations != null && expert!.specializations!.isNotEmpty) ? expert.specializations!.first.name : 'Expert',
+        avatarUrl: avatar,
+        topic: c.topic ?? 'Consultation',
+        consultType: 'Chat Consultation',
+        amount: c.payment!.amount.toDouble(),
+        platformFee: c.payment!.platformFee.toDouble(),
+        date: dateStr,
+        invoiceNumber: 'INV-${c.payment!.id}',
+        status: st,
+        cancelReason: c.payment!.rejectionNote,
+      );
+    }).toList();
+  }
+
   List<PaymentItem> get filteredPayments {
-    if (filterStatus == null) return allPayments;
-    return allPayments.where((p) => p.status == filterStatus).toList();
+    if (filterStatus == null) return _allPayments;
+    return _allPayments.where((p) => p.status == filterStatus).toList();
   }
 
   Future<void> downloadInvoice(PaymentItem payment) async {
@@ -797,7 +688,7 @@ class UserRiwayatPembayaranScreenState
                       children: [
                         buildFilterChip(
                           label: 'All',
-                          count: allPayments.length,
+                          count: _allPayments.length,
                           icon: Icons.list_rounded,
                           color: kPayHistMain,
                           isActive: filterStatus == null,
@@ -809,7 +700,7 @@ class UserRiwayatPembayaranScreenState
                         const SizedBox(width: 8),
                         buildFilterChip(
                           label: 'Paid',
-                          count: allPayments
+                          count: _allPayments
                               .where((p) => p.status == PaymentStatus.paid)
                               .length,
                           icon: Icons.check_circle_outline_rounded,
@@ -823,7 +714,7 @@ class UserRiwayatPembayaranScreenState
                         const SizedBox(width: 8),
                         buildFilterChip(
                           label: 'Cancelled',
-                          count: allPayments
+                          count: _allPayments
                               .where((p) => p.status == PaymentStatus.cancelled)
                               .length,
                           icon: Icons.cancel_outlined,
@@ -837,7 +728,7 @@ class UserRiwayatPembayaranScreenState
                         const SizedBox(width: 8),
                         buildFilterChip(
                           label: 'Refunded',
-                          count: allPayments
+                          count: _allPayments
                               .where((p) => p.status == PaymentStatus.refunded)
                               .length,
                           icon: Icons.replay_rounded,

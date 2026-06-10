@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';               // tambahkan
 import '../../app_colors.dart';
 import '../../app_widgets.dart';
+import '../../providers/auth_provider.dart';           // tambahkan
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
-import '../user/user_home.dart';
+import '../user/user_home.dart';                       // untuk HomeUserScreen
+import '../expert/expert_home.dart';                   // untuk ExpertHomePage
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,8 +22,8 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _emailError;
   String? _passError;
 
-  bool isValidGmail(String email) {
-    return RegExp(r'^[\w\.-]+@gmail\.com$').hasMatch(email);
+  bool isValidEmail(String email) {
+    return RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$').hasMatch(email);
   }
 
   @override
@@ -49,24 +52,15 @@ class _LoginScreenState extends State<LoginScreen> {
     ));
   }
 
-  void _pushReplacement(Widget screen) {
-    Navigator.of(context).pushReplacement(PageRouteBuilder(
-      pageBuilder: (_, __, ___) => screen,
-      transitionsBuilder: (_, animation, __, child) =>
-          FadeTransition(opacity: animation, child: child),
-      transitionDuration: const Duration(milliseconds: 400),
-    ));
-  }
-
-  void _handleLogin() {
+  void _handleLogin() async {
     final email = _emailController.text.trim();
     final password = _passController.text.trim();
 
     setState(() {
       if (email.isEmpty) {
         _emailError = 'Email is required';
-      } else if (!isValidGmail(email)) {
-        _emailError = 'Please use a @gmail.com address';
+      } else if (!isValidEmail(email)) {
+        _emailError = 'Please enter a valid email address';
       } else {
         _emailError = null;
       }
@@ -75,7 +69,30 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (_emailError != null || _passError != null) return;
 
-    _pushReplacement(HomeUserScreen());
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final success = await authProvider.login(email, password);
+
+    if (success) {
+      final role = authProvider.user?.role;
+      if (role == 'expert') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const ExpertHomePage()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeUserScreen()),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? 'Login failed'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 
   @override

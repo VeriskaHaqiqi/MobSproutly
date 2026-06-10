@@ -3,7 +3,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import '../../providers/article_provider.dart';
+import '../../models/article_model.dart';
 import 'expert_artikel.dart';
 
 const Color kTulisMain = Color(0xFF5DCFCF);
@@ -98,6 +102,9 @@ class ExpertTulisArtikelPageState extends State<ExpertTulisArtikelPage> {
   void initState() {
     super.initState();
     _attachSectionListener(0);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ArticleProvider>(context, listen: false).fetchCategories();
+    });
   }
 
   void _attachSectionListener(int i) {
@@ -422,17 +429,22 @@ class ExpertTulisArtikelPageState extends State<ExpertTulisArtikelPage> {
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────
-  void handleUpload() {
+  void handleUpload() async {
     setState(() {
       titleErr =
           titleCtrl.text.trim().isEmpty ? 'Article title is required' : null;
     });
     if (titleErr != null) return;
 
-    final hasContent = sections.any((s) =>
-        s.type == SectionType.image ||
-        (s.ctrl != null && s.ctrl!.text.trim().isNotEmpty));
-    if (!hasContent) {
+    final contentBuffer = StringBuffer();
+    for (final s in sections) {
+      if (s.type == SectionType.text && s.ctrl != null) {
+        contentBuffer.write(s.ctrl!.text);
+      }
+    }
+    final content = contentBuffer.toString().trim();
+
+    if (content.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Please write some content before uploading.',
             style: GoogleFonts.outfit(fontSize: 13)),
@@ -444,25 +456,33 @@ class ExpertTulisArtikelPageState extends State<ExpertTulisArtikelPage> {
     }
 
     setState(() => isUploading = true);
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (!mounted) return;
-      setState(() => isUploading = false);
-      allExpertArticles.insert(
-        0,
-        ExpertArticleItem(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          category: selectedCategory,
-          title: titleCtrl.text.trim(),
-          author: 'Dr. Isyana Chen',
-          time: 'Just now',
-          imageUrl: coverImage != null
-              ? coverImage!.path
-              : 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=600&q=80&auto=format&fit=crop',
-          isMine: true,
-        ),
-      );
+    final articleProvider = Provider.of<ArticleProvider>(context, listen: false);
+    final category = articleProvider.categories.firstWhere(
+      (c) => c.name.toLowerCase() == selectedCategory.toLowerCase(),
+      orElse: () => ArticleCategory(id: 1, name: 'Ornamental Plants'),
+    );
+
+    final success = await articleProvider.createArticle(
+      categoryId: category.id,
+      title: titleCtrl.text.trim(),
+      content: content,
+      coverImagePath: coverImage?.path,
+    );
+
+    setState(() => isUploading = false);
+
+    if (success) {
       showSuccessDialog();
-    });
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(articleProvider.errorMessage ?? 'Failed to upload article.',
+            style: GoogleFonts.outfit(fontSize: 13)),
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ));
+    }
   }
 
   void showSuccessDialog() {

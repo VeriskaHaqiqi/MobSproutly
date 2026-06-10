@@ -1,7 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
+import '../../providers/auth_provider.dart';
 import 'expert_home.dart' hide ExpertAccountPage;
 import 'expert_artikel.dart';
 import 'expert_consult.dart';
@@ -19,34 +20,7 @@ const Color kExSetTeal = Color(0xFF76EAD0);
 const Color kExSetBlue = Color(0xFF76D7EA);
 const Color kExSetScaffold = Color(0xFFF0F4F3);
 
-// ─── Global Expert Profile State ─────────────────────────────────────────────
-class ExpertProfile {
-  static String name = 'Dr. Isyana Chen';
-  static String email = 'isyana.chen@gmail.com';
-  static String phone = '+1 (555) 123-4567';
-  static String gender = 'Female';
-  static String category = 'Ornamental Plants';
-  static String? photoPath;
-
-  static List<String> specializations = [
-    'Orchid Specialist',
-  ];
-
-  // Biar kode lama yang masih manggil ExpertProfile.specialty tetap aman.
-  static String get specialty => specializations.join(', ');
-
-  static set specialty(String value) {
-    specializations = value
-        .split(',')
-        .map((item) => item.trim())
-        .where((item) => item.isNotEmpty)
-        .toList();
-
-    if (specializations.isEmpty) {
-      specializations = ['Orchid Specialist'];
-    }
-  }
-}
+// ─── ExpertProfile class removed – all data now comes from AuthProvider ──────
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 class ExpertAccountPage extends StatefulWidget {
@@ -194,13 +168,13 @@ class _ExpertAccountPageState extends State<ExpertAccountPage> {
     );
   }
 
-  Widget _emptyAccountAvatar() {
+  Widget _emptyAccountAvatar({double size = 56}) {
     return Container(
       color: const Color(0xFFF0F4F3),
       child: Icon(
         Icons.account_circle_rounded,
         color: Colors.grey.shade400,
-        size: 56,
+        size: size,
       ),
     );
   }
@@ -393,6 +367,15 @@ class _ExpertAccountPageState extends State<ExpertAccountPage> {
   }
 
   Widget _buildProfileCard() {
+    final user = Provider.of<AuthProvider>(context).user;
+    final String userName = user?.name ?? 'Expert';
+    final String userEmail = user?.email ?? '-';
+    final String userPhone = user?.phone ?? '-';
+    final String userGender = user?.gender ?? '-';
+    final String? userPhoto = user?.photoUrl;
+    final List<String> specs = user?.specializations?.map((s) => s.name).toList() ?? [];
+    final String category = user?.expertProfile?.description ?? (specs.isNotEmpty ? specs.first : 'Expert');
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -420,10 +403,9 @@ class _ExpertAccountPageState extends State<ExpertAccountPage> {
                   border: Border.all(color: kExSetTeal, width: 2.5),
                 ),
                 child: ClipOval(
-                  child: ExpertProfile.photoPath != null &&
-                          ExpertProfile.photoPath!.isNotEmpty
-                      ? Image.file(
-                          File(ExpertProfile.photoPath!),
+                  child: userPhoto != null && userPhoto.isNotEmpty
+                      ? Image.network(
+                          userPhoto,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => _emptyAccountAvatar(),
                         )
@@ -436,7 +418,7 @@ class _ExpertAccountPageState extends State<ExpertAccountPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      ExpertProfile.name,
+                      userName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.outfit(
@@ -447,7 +429,7 @@ class _ExpertAccountPageState extends State<ExpertAccountPage> {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      ExpertProfile.email,
+                      userEmail,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.outfit(
@@ -457,7 +439,7 @@ class _ExpertAccountPageState extends State<ExpertAccountPage> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      ExpertProfile.phone,
+                      userPhone,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.outfit(
@@ -467,7 +449,7 @@ class _ExpertAccountPageState extends State<ExpertAccountPage> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      ExpertProfile.gender,
+                      userGender,
                       style: GoogleFonts.outfit(
                         fontSize: 12,
                         color: Colors.grey.shade500,
@@ -475,7 +457,7 @@ class _ExpertAccountPageState extends State<ExpertAccountPage> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      ExpertProfile.category,
+                      category,
                       style: GoogleFonts.outfit(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -486,7 +468,7 @@ class _ExpertAccountPageState extends State<ExpertAccountPage> {
                     Wrap(
                       spacing: 6,
                       runSpacing: 6,
-                      children: ExpertProfile.specializations.map((item) {
+                      children: specs.map((item) {
                         return Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 9,

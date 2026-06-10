@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../providers/article_provider.dart';
+import '../../models/article_model.dart';
+import '../../utils/model_converter.dart';
 import 'user_artikel.dart';
 import 'user_pencarian.dart';
 
@@ -9,48 +13,7 @@ const Color dBlue = Color(0xFF76D7EA);
 const Color dLGreen = Color(0xFFD0FF99);
 const Color dGreen = Color(0xFF99FF99);
 
-// ─── Dummy article body ───────────────────────────────────────────────────────
-String getDummyContent(ArticleItem article) {
-  return '''
-Growing and caring for plants at home can be one of the most rewarding hobbies. Whether you're a complete beginner or have some experience, understanding the basics of plant care will help your ${article.category.toLowerCase()} thrive in any environment.
-
-Getting Started
-
-Every plant has its own unique requirements when it comes to light, water, and soil. The key is to observe your plant regularly and adjust your care routine based on how it responds.
-
-For ${article.category} like the ones covered in this guide, you'll want to start by choosing the right location. Most plants prefer bright, indirect light — near a window but not in direct afternoon sun.
-
-Watering Guidelines
-
-Overwatering is one of the most common mistakes beginners make. Always check the soil moisture before watering. Stick your finger about 2 cm into the soil — if it feels dry, it's time to water. If it still feels moist, wait another day or two.
-
-Water your plants thoroughly until it drains from the bottom, then empty the saucer to prevent root rot.
-
-Soil & Fertilization
-
-Use well-draining potting mix appropriate for your plant type. A general-purpose mix works well for most indoor and outdoor plants. During the growing season (spring and summer), feed your plants with a balanced liquid fertilizer every 2–4 weeks.
-
-Common Problems & Solutions
-
-• Yellowing leaves — Usually a sign of overwatering or lack of nutrients. Check your watering schedule and consider adding fertilizer.
-
-• Brown leaf tips — Often caused by low humidity or fluoride in tap water. Try misting the leaves or using filtered water.
-
-• Wilting — Can indicate underwatering or root rot. Check the soil and inspect the roots if necessary.
-
-• Pest infestations — Inspect leaves regularly for pests like aphids or spider mites. Treat early with neem oil or insecticidal soap.
-
-Pro Tips from Our Experts
-
-"The best plant parents are observant plant parents. Take a few minutes each week to really look at your plants — new growth is a great sign, while dropping leaves or color changes usually signal something needs attention." — ${article.author}
-
-Remember, every plant is different and it may take some time to learn what your specific plant needs. Don't be discouraged by early setbacks. With patience and attention, your plants will flourish.
-
-About Sproutly
-
-Sproutly connects you with certified botanist experts who specialize in home and garden plants, including ornamental plants, vegetables, fruit trees in pots, and culinary herbs. Our experts are available for one-on-one consultations to help you solve plant problems and improve your growing skills.
-''';
-}
+// No dummy content needed
 
 class UserDetailArtikelScreen extends StatefulWidget {
   final ArticleItem article;
@@ -63,28 +26,52 @@ class UserDetailArtikelScreen extends StatefulWidget {
 }
 
 class UserDetailArtikelScreenState extends State<UserDetailArtikelScreen> {
-  bool get isBookmarked => globalBookmarkedIds.contains(widget.article.id);
+  bool get isBookmarked => widget.article.isBookmarked;
 
-  void toggleBookmark() {
-    setState(() {
-      if (isBookmarked) {
-        globalBookmarkedIds.remove(widget.article.id);
-        widget.article.isBookmarked = false;
-      } else {
-        globalBookmarkedIds.add(widget.article.id);
-        widget.article.isBookmarked = true;
-      }
-    });
+  void toggleBookmark() async {
+    final articleProvider = Provider.of<ArticleProvider>(context, listen: false);
+    final realArticle = articleProvider.articles.firstWhere(
+      (a) => a.id.toString() == widget.article.id,
+      orElse: () => articleProvider.bookmarkedArticles.firstWhere(
+        (a) => a.id.toString() == widget.article.id,
+        orElse: () => Article(
+          id: int.parse(widget.article.id),
+          userId: 0,
+          categoryId: 0,
+          title: widget.article.title,
+          content: widget.article.content,
+          coverImage: widget.article.imageUrl,
+          status: 'published',
+          isBookmarked: widget.article.isBookmarked,
+        ),
+      ),
+    );
+
+    final success = await articleProvider.toggleBookmark(realArticle);
+    if (success) {
+      setState(() {
+        widget.article.isBookmarked = realArticle.isBookmarked;
+        if (realArticle.isBookmarked) {
+          globalBookmarkedIds.add(widget.article.id);
+        } else {
+          globalBookmarkedIds.remove(widget.article.id);
+        }
+      });
+    }
   }
 
   // Rekomendasi: artikel lain selain yang sedang dibuka,
   // prioritaskan kategori yang sama, max 5
   List<ArticleItem> get recommendedArticles {
-    final sameCategory = allArticles
+    final articleProvider = Provider.of<ArticleProvider>(context, listen: false);
+    final rawArticles = articleProvider.articles;
+    final converted = rawArticles.map((a) => ModelConverter.articleToItem(a)).toList();
+
+    final sameCategory = converted
         .where((a) =>
             a.id != widget.article.id && a.category == widget.article.category)
         .toList();
-    final others = allArticles
+    final others = converted
         .where((a) =>
             a.id != widget.article.id && a.category != widget.article.category)
         .toList();
@@ -178,7 +165,9 @@ class UserDetailArtikelScreenState extends State<UserDetailArtikelScreen> {
 
                   // ── Article body ──
                   Text(
-                    getDummyContent(widget.article),
+                    widget.article.content.isNotEmpty
+                        ? widget.article.content
+                        : 'No content available.',
                     style: GoogleFonts.outfit(
                       fontSize: 14,
                       color: Colors.black87,

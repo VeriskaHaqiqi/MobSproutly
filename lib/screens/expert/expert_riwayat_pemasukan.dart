@@ -8,7 +8,9 @@ import 'expert_home.dart';
 import 'expert_artikel.dart';
 import 'expert_consult.dart';
 import 'expert_setting.dart';
-
+import 'package:provider/provider.dart';
+import '../../providers/expert_provider.dart';
+import '../../providers/auth_provider.dart';
 const Color kRiwMain = Color(0xFF5DCFCF);
 const Color kRiwTeal = Color(0xFF76EAD0);
 const Color kRiwBlue = Color(0xFF76D7EA);
@@ -44,104 +46,9 @@ class IncomeItem {
   });
 }
 
-// ─── Dummy Data ───────────────────────────────────────────────────────────────
-final List<IncomeItem> _allIncome = [
-  IncomeItem(
-      id: '1',
-      clientName: 'Sarah Chen',
-      clientAvatar:
-          'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=150&q=80&auto=format&fit=crop',
-      sessionType: 'Chat Consultation',
-      date: 'Dec 15, 2024',
-      time: '2:30 PM',
-      amountRp: 45000,
-      status: IncomeStatus.paid,
-      invoiceNumber: 'INV-2847'),
-  IncomeItem(
-      id: '2',
-      clientName: 'Michael Rodriguez',
-      clientAvatar:
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80&auto=format&fit=crop',
-      sessionType: 'Chat Consultation',
-      date: 'Dec 14, 2024',
-      time: '10:15 AM',
-      amountRp: 85000,
-      status: IncomeStatus.paid,
-      invoiceNumber: 'INV-2846'),
-  IncomeItem(
-      id: '3',
-      clientName: 'Emma Johnson',
-      clientAvatar:
-          'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&q=80&auto=format&fit=crop',
-      sessionType: 'Plant Care Plan',
-      date: 'Dec 13, 2024',
-      time: '4:45 PM',
-      amountRp: 65000,
-      status: IncomeStatus.pending,
-      invoiceNumber: 'INV-2845'),
-  IncomeItem(
-      id: '4',
-      clientName: 'David Park',
-      clientAvatar:
-          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&q=80&auto=format&fit=crop',
-      sessionType: 'Chat Consultation',
-      date: 'Dec 12, 2024',
-      time: '11:20 AM',
-      amountRp: 45000,
-      status: IncomeStatus.paid,
-      invoiceNumber: 'INV-2844'),
-  IncomeItem(
-      id: '5',
-      clientName: 'Lisa Thompson',
-      clientAvatar:
-          'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&q=80&auto=format&fit=crop',
-      sessionType: 'Chat Consultation',
-      date: 'Dec 11, 2024',
-      time: '3:00 PM',
-      amountRp: 85000,
-      status: IncomeStatus.paid,
-      invoiceNumber: 'INV-2843'),
-  IncomeItem(
-      id: '6',
-      clientName: 'James Anderson',
-      clientAvatar:
-          'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80&auto=format&fit=crop',
-      sessionType: 'Chat Consultation',
-      date: 'Nov 28, 2024',
-      time: '9:00 AM',
-      amountRp: 50000,
-      status: IncomeStatus.paid,
-      invoiceNumber: 'INV-2842'),
-  IncomeItem(
-      id: '7',
-      clientName: 'Adela Ulin',
-      clientAvatar:
-          'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&q=80&auto=format&fit=crop',
-      sessionType: 'Chat Consultation',
-      date: 'Nov 20, 2024',
-      time: '2:00 PM',
-      amountRp: 35000,
-      status: IncomeStatus.paid,
-      invoiceNumber: 'INV-2841'),
-];
-
-// Weekly bar chart data
-final List<_WeekBar> _weekBars = [
-  _WeekBar('Mon', 125000),
-  _WeekBar('Tue', 180000),
-  _WeekBar('Wed', 225000),
-  _WeekBar('Thu', 285000),
-  _WeekBar('Fri', 200000),
-];
-
-class _WeekBar {
-  final String day;
-  final int amount;
-  _WeekBar(this.day, this.amount);
-}
-
+// Models
 // ─── PDF Generator ────────────────────────────────────────────────────────────
-Future<Uint8List> _generateInvoice(IncomeItem item) async {
+Future<Uint8List> _generateInvoice(IncomeItem item, {required String expertName, required String expertSpecialty}) async {
   final doc = pw.Document();
   final teal = PdfColor.fromHex('#5DCFCF');
   final grey = PdfColors.grey700;
@@ -208,10 +115,10 @@ Future<Uint8List> _generateInvoice(IncomeItem item) async {
                   pw.Text('FROM',
                       style: pw.TextStyle(fontSize: 10, color: grey)),
                   pw.SizedBox(height: 4),
-                  pw.Text('Dr. Isyana Chen',
+                  pw.Text(expertName,
                       style: pw.TextStyle(
                           fontSize: 13, fontWeight: pw.FontWeight.bold)),
-                  pw.Text('Orchid Specialist',
+                  pw.Text(expertSpecialty,
                       style: pw.TextStyle(fontSize: 11, color: grey)),
                   pw.Text('Sproutly Expert',
                       style: pw.TextStyle(fontSize: 11, color: grey)),
@@ -389,12 +296,58 @@ class _ExpertRiwayatPemasukanPageState
   final List<String> _periods = ['All Time', 'This Month'];
   final List<String> _statuses = ['All', 'Paid', 'Pending'];
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ExpertProvider>(context, listen: false).fetchIncomeHistory(refresh: true);
+    });
+  }
+
+  String _formatDate(DateTime dt) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+  }
+
+  String _formatTime(DateTime dt) {
+    int h = dt.hour;
+    String period = 'AM';
+    if (h >= 12) {
+      period = 'PM';
+      if (h > 12) h -= 12;
+    }
+    if (h == 0) h = 12;
+    String m = dt.minute.toString().padLeft(2, '0');
+    return '$h:$m $period';
+  }
+
+  List<IncomeItem> get _allIncome {
+    final provider = Provider.of<ExpertProvider>(context);
+    return provider.incomeHistory.map((json) {
+      final dtStr = json['created_at'];
+      final dt = dtStr != null ? DateTime.parse(dtStr) : DateTime.now();
+      
+      return IncomeItem(
+        id: json['id']?.toString() ?? '0',
+        clientName: json['user']?['name'] ?? 'Client',
+        clientAvatar: json['user']?['photo_url'] ?? 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80',
+        sessionType: 'Chat Consultation',
+        date: _formatDate(dt),
+        time: _formatTime(dt),
+        amountRp: double.tryParse((json['amount'] ?? json['fee'] ?? '0').toString())?.toInt() ?? 0,
+        status: (json['status'] ?? 'completed') == 'completed' ? IncomeStatus.paid : IncomeStatus.pending,
+        invoiceNumber: 'INV-${json['id']}',
+      );
+    }).toList();
+  }
+
   List<IncomeItem> get _filtered {
-    var list = List<IncomeItem>.from(_allIncome);
+    var list = _allIncome;
 
     // Period filter
     if (_period == 'This Month') {
-      list = list.where((i) => i.date.startsWith('Dec')).toList();
+      final currentMonthStr = _formatDate(DateTime.now()).split(' ').first;
+      list = list.where((i) => i.date.startsWith(currentMonthStr)).toList();
     }
 
     // Status filter
@@ -414,15 +367,45 @@ class _ExpertRiwayatPemasukanPageState
       .where((i) => i.status == IncomeStatus.paid)
       .fold(0, (sum, i) => sum + i.amountRp);
 
-  int get _thisMonthIncome => _allIncome
-      .where((i) => i.date.startsWith('Dec') && i.status == IncomeStatus.paid)
-      .fold(0, (sum, i) => sum + i.amountRp);
+  int get _thisMonthIncome {
+    final currentMonthStr = _formatDate(DateTime.now()).split(' ').first;
+    return _allIncome
+        .where((i) => i.date.startsWith(currentMonthStr) && i.status == IncomeStatus.paid)
+        .fold(0, (sum, i) => sum + i.amountRp);
+  }
 
   int get _totalSessions => _filtered.length;
 
+  List<_WeekBar> get _weekBars {
+    final Map<int, int> totals = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0};
+    for (var item in _allIncome) {
+      if (item.status == IncomeStatus.paid) {
+        try {
+          final parts = item.date.split(', ');
+          if (parts.length > 1) {
+            final year = int.parse(parts[1]);
+            final monthDay = parts[0].split(' ');
+            final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            final month = months.indexOf(monthDay[0]) + 1;
+            final day = int.parse(monthDay[1]);
+            final dt = DateTime(year, month, day);
+            totals[dt.weekday] = (totals[dt.weekday] ?? 0) + item.amountRp;
+          }
+        } catch (_) {}
+      }
+    }
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return List.generate(7, (i) => _WeekBar(days[i], totals[i+1] ?? 0));
+  }
+
   Future<void> _downloadInvoice(IncomeItem item) async {
     try {
-      final bytes = await _generateInvoice(item);
+      final user = Provider.of<AuthProvider>(context, listen: false).user;
+      final expertName = user?.name ?? 'Expert';
+      final expertSpecialty = user?.specializations?.isNotEmpty == true
+          ? user!.specializations!.first.name
+          : 'Specialist';
+      final bytes = await _generateInvoice(item, expertName: expertName, expertSpecialty: expertSpecialty);
       await Printing.sharePdf(
         bytes: bytes,
         filename: '${item.invoiceNumber}.pdf',
@@ -610,8 +593,8 @@ class _ExpertRiwayatPemasukanPageState
   @override
   Widget build(BuildContext context) {
     final list = _filtered;
-    final maxBar =
-        _weekBars.map((b) => b.amount).reduce((a, b) => a > b ? a : b);
+    final weekBars = _weekBars;
+    final maxBar = weekBars.isEmpty ? 1 : weekBars.map((b) => b.amount).reduce((a, b) => a > b ? a : b);
 
     return Scaffold(
       backgroundColor: kRiwScaffold,
@@ -1048,7 +1031,7 @@ class _ExpertRiwayatPemasukanPageState
               crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: _weekBars.map((bar) {
-                final ratio = bar.amount / maxBar;
+                final ratio = maxBar > 0 ? bar.amount / maxBar : 0.0;
                 final barColors = [
                   kRiwTeal,
                   kRiwBlue,
@@ -1173,4 +1156,10 @@ class _ExpertRiwayatPemasukanPageState
       ),
     );
   }
+}
+
+class _WeekBar {
+  final String day;
+  final int amount;
+  _WeekBar(this.day, this.amount);
 }

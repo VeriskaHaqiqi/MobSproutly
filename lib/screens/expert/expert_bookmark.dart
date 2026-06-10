@@ -6,7 +6,10 @@ import 'expert_detail_artikel.dart';
 import 'expert_home.dart' hide ExpertAccountPage;
 import 'expert_consult.dart';
 import 'expert_setting.dart';
-
+import 'package:provider/provider.dart';
+import '../../providers/article_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../utils/model_converter.dart';
 const Color kExBmMain = Color(0xFF5DCFCF);
 const Color kExBmTeal = Color(0xFF76EAD0);
 const Color kExBmBlue = Color(0xFF76D7EA);
@@ -42,6 +45,9 @@ class ExpertBookmarkPageState extends State<ExpertBookmarkPage> {
   }
 
   List<ExpertArticleItem> get bookmarked {
+    final provider = Provider.of<ArticleProvider>(context);
+    final userProvider = Provider.of<AuthProvider>(context, listen: false);
+    final allExpertArticles = provider.articles.map((a) => ModelConverter.articleToExpertArticleItem(a, userProvider.user?.id)).toList();
     return allExpertArticles
         .where((a) => expertBookmarkedIds.contains(a.id))
         .toList();

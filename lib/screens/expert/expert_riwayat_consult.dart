@@ -5,6 +5,9 @@ import 'expert_consult.dart';
 import 'expert_home.dart' hide ExpertAccountPage;
 import 'expert_artikel.dart';
 import 'expert_setting.dart';
+import 'package:provider/provider.dart';
+import '../../providers/consultation_provider.dart';
+import '../../utils/model_converter.dart';
 
 const Color kExRiwMain = Color(0xFF5DCFCF);
 const Color kExRiwTeal = Color(0xFF76EAD0);
@@ -54,9 +57,13 @@ class ExpertRiwayatConsultPageState extends State<ExpertRiwayatConsultPage> {
   }
 
   List<ExpertConsultItem> get filteredCompleted {
-    if (searchQuery.isEmpty) return completedConsults;
+    final provider = Provider.of<ConsultationProvider>(context);
+    final completed = provider.expertConsultations.where((c) => c.status == 'completed').toList();
+    final items = completed.map((c) => ModelConverter.consultationToExpertConsultItem(c)).toList();
 
-    return completedConsults.where((c) {
+    if (searchQuery.isEmpty) return items;
+
+    return items.where((c) {
       return c.clientName.toLowerCase().contains(searchQuery) ||
           c.topic.toLowerCase().contains(searchQuery) ||
           c.category.toLowerCase().contains(searchQuery);
@@ -571,10 +578,16 @@ class ExpertRiwayatConsultPageState extends State<ExpertRiwayatConsultPage> {
   }
 
   Widget buildTabBar() {
+    final provider = Provider.of<ConsultationProvider>(context);
+    final list = provider.expertConsultations;
+    final reqCount = list.where((c) => c.status == 'waiting_verification').length;
+    final activeCount = list.where((c) => c.status == 'active').length;
+    final completedCount = list.where((c) => c.status == 'completed').length;
+
     final tabs = [
-      _RiwTabInfo('Requested', requestedConsults.length, Colors.orange),
-      _RiwTabInfo('Active', activeConsults.length, kExRiwMain),
-      _RiwTabInfo('Completed', completedConsults.length, Colors.grey.shade500),
+      _RiwTabInfo('Requested', reqCount, Colors.orange),
+      _RiwTabInfo('Active', activeCount, kExRiwMain),
+      _RiwTabInfo('Completed', completedCount, Colors.grey.shade500),
     ];
 
     return Padding(

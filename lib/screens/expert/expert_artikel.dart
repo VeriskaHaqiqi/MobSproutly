@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../providers/article_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../utils/model_converter.dart';
 
 import 'expert_home.dart' hide ExpertAccountPage;
 import 'expert_setting.dart';
@@ -48,103 +52,8 @@ const List<String> expertArtikelCategories = [
   'Herbs & Spices',
 ];
 
-// ─── Dummy Articles ───────────────────────────────────────────────────────────
-final List<ExpertArticleItem> allExpertArticles = [
-  ExpertArticleItem(
-    id: '1',
-    category: 'Ornamental Plants',
-    title: 'Complete Guide to Monstera Deliciosa Care',
-    author: 'Dr. Isyana Chen',
-    time: '2 days ago',
-    imageUrl:
-        'https://images.pexels.com/photos/3097770/pexels-photo-3097770.jpeg?auto=compress&cs=tinysrgb&w=900',
-    isMine: true,
-  ),
-  ExpertArticleItem(
-    id: '2',
-    category: 'Ornamental Plants',
-    title: 'Top 10 Low-Maintenance Indoor Plants for Busy People',
-    author: 'Dr. Sarah Lee',
-    time: '1 week ago',
-    imageUrl:
-        'https://images.pexels.com/photos/6208086/pexels-photo-6208086.jpeg?auto=compress&cs=tinysrgb&w=900',
-  ),
-  ExpertArticleItem(
-    id: '3',
-    category: 'Ornamental Plants',
-    title: 'Orchid Care 101: Keep Your Orchids Blooming Year-Round',
-    author: 'Dr. Isyana Chen',
-    time: '2 weeks ago',
-    imageUrl:
-        'https://images.pexels.com/photos/1400375/pexels-photo-1400375.jpeg?auto=compress&cs=tinysrgb&w=900',
-    isMine: true,
-  ),
-  ExpertArticleItem(
-    id: '4',
-    category: 'Vegetables & Food Crops',
-    title: "Beginner's Guide to Hydroponic Lettuce Farming",
-    author: 'Michael Chen',
-    time: '5 days ago',
-    imageUrl:
-        'https://images.pexels.com/photos/4505161/pexels-photo-4505161.jpeg?auto=compress&cs=tinysrgb&w=900',
-  ),
-  ExpertArticleItem(
-    id: '5',
-    category: 'Vegetables & Food Crops',
-    title: 'Growing Tomatoes: From Seed to Harvest',
-    author: 'James Wilson',
-    time: '2 weeks ago',
-    imageUrl:
-        'https://images.pexels.com/photos/1327838/pexels-photo-1327838.jpeg?auto=compress&cs=tinysrgb&w=900',
-  ),
-  ExpertArticleItem(
-    id: '6',
-    category: 'Vegetables & Food Crops',
-    title: 'Natural Ways to Control Pests on Vegetable Plants',
-    author: 'Dr. Isyana Chen',
-    time: '3 weeks ago',
-    imageUrl:
-        'https://images.pexels.com/photos/4751978/pexels-photo-4751978.jpeg?auto=compress&cs=tinysrgb&w=900',
-    isMine: true,
-  ),
-  ExpertArticleItem(
-    id: '7',
-    category: 'Fruit Plants',
-    title: 'Container Fruit Trees: Growing Citrus & Berries at Home',
-    author: 'Dr. Mark Lee',
-    time: '3 weeks ago',
-    imageUrl:
-        'https://images.pexels.com/photos/2090902/pexels-photo-2090902.jpeg?auto=compress&cs=tinysrgb&w=900',
-  ),
-  ExpertArticleItem(
-    id: '8',
-    category: 'Fruit Plants',
-    title: 'Strawberry at Home: Planting Tips for Pots & Planters',
-    author: 'Dr. Aisha Patel',
-    time: '1 month ago',
-    imageUrl:
-        'https://images.pexels.com/photos/46174/strawberries-berries-fruit-freshness-46174.jpeg?auto=compress&cs=tinysrgb&w=900',
-  ),
-  ExpertArticleItem(
-    id: '9',
-    category: 'Herbs & Spices',
-    title: 'How to Grow Basil, Rosemary & Mint at Home',
-    author: 'Dr. Isyana Chen',
-    time: '1 month ago',
-    imageUrl:
-        'https://images.pexels.com/photos/143133/pexels-photo-143133.jpeg?auto=compress&cs=tinysrgb&w=900',
-    isMine: true,
-  ),
-  ExpertArticleItem(
-    id: '10',
-    category: 'Herbs & Spices',
-    title: 'Growing Ginger & Turmeric in Your Home Garden',
-    author: 'Dr. Priya Sharma',
-    time: '5 weeks ago',
-    imageUrl:
-        'https://images.pexels.com/photos/4198021/pexels-photo-4198021.jpeg?auto=compress&cs=tinysrgb&w=900',
-  ),
-];
+
+
 
 // ─── Bookmarked IDs ───────────────────────────────────────────────────────────
 final Set<String> expertBookmarkedIds = {};
@@ -182,8 +91,10 @@ class ExpertArticlePageState extends State<ExpertArticlePage> {
   @override
   void initState() {
     super.initState();
-    filtered = List.from(allExpertArticles);
     searchCtrl.addListener(onSearch);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ArticleProvider>(context, listen: false).fetchArticles(refresh: true);
+    });
   }
 
   @override
@@ -196,41 +107,33 @@ class ExpertArticlePageState extends State<ExpertArticlePage> {
   void onSearch() {
     setState(() {
       searchQuery = searchCtrl.text.trim().toLowerCase();
-      applyFilter();
     });
-  }
-
-  void applyFilter() {
-    filtered = allExpertArticles.where((a) {
-      final matchCat =
-          selectedCategory == 'All' || a.category == selectedCategory;
-
-      final matchSearch = searchQuery.isEmpty ||
-          a.title.toLowerCase().contains(searchQuery) ||
-          a.author.toLowerCase().contains(searchQuery) ||
-          a.category.toLowerCase().contains(searchQuery);
-
-      return matchCat && matchSearch;
-    }).toList();
   }
 
   void selectCategory(String cat) {
     setState(() {
       selectedCategory = cat;
-      applyFilter();
     });
   }
 
-  void toggleBookmark(ExpertArticleItem article) {
-    setState(() {
-      if (expertBookmarkedIds.contains(article.id)) {
-        expertBookmarkedIds.remove(article.id);
-        article.isBookmarked = false;
-      } else {
-        expertBookmarkedIds.add(article.id);
-        article.isBookmarked = true;
-      }
-    });
+  void toggleBookmark(ExpertArticleItem article) async {
+    final articleProvider = Provider.of<ArticleProvider>(context, listen: false);
+    final realArticle = articleProvider.articles.firstWhere(
+      (a) => a.id.toString() == article.id,
+      orElse: () => throw Exception('Article not found'),
+    );
+    final success = await articleProvider.toggleBookmark(realArticle);
+    if (success) {
+      setState(() {
+        if (expertBookmarkedIds.contains(article.id)) {
+          expertBookmarkedIds.remove(article.id);
+          article.isBookmarked = false;
+        } else {
+          expertBookmarkedIds.add(article.id);
+          article.isBookmarked = true;
+        }
+      });
+    }
   }
 
   void onNavTapped(int index) {
@@ -274,29 +177,56 @@ class ExpertArticlePageState extends State<ExpertArticlePage> {
       MaterialPageRoute(
         builder: (ctx) => ExpertDetailArtikelPage(article: article),
       ),
-    ).then((_) => setState(() {
-          applyFilter(); // ← tambah ini
-        }));
+    ).then((_) => setState(() {}));
   }
 
   @override
   Widget build(BuildContext context) {
+    final articleProvider = Provider.of<ArticleProvider>(context);
+    final expert = Provider.of<AuthProvider>(context, listen: false).user;
+    final rawArticles = articleProvider.articles;
+    final List<ExpertArticleItem> converted = rawArticles.map((a) => ModelConverter.articleToExpertArticleItem(a, expert?.id)).toList();
+
+    for (var a in rawArticles) {
+      if (a.isBookmarked) {
+        expertBookmarkedIds.add(a.id.toString());
+      } else {
+        expertBookmarkedIds.remove(a.id.toString());
+      }
+    }
+
+    final filteredList = converted.where((ExpertArticleItem a) {
+      final matchCat =
+          selectedCategory == 'All' || a.category.toLowerCase() == selectedCategory.toLowerCase();
+
+      final matchSearch = searchQuery.isEmpty ||
+          a.title.toLowerCase().contains(searchQuery) ||
+          a.author.toLowerCase().contains(searchQuery) ||
+          a.category.toLowerCase().contains(searchQuery);
+
+      return matchCat && matchSearch;
+    }).toList();
+
     return Scaffold(
       backgroundColor: kExArtScaffold,
       body: Column(
         children: [
           buildHeader(),
           Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                children: [
-                  const SizedBox(height: 14),
-                  buildCategoryTabs(),
-                  const SizedBox(height: 14),
-                  filtered.isEmpty ? buildEmpty() : buildArticleList(),
-                  const SizedBox(height: 24),
-                ],
+            child: RefreshIndicator(
+              onRefresh: () => articleProvider.fetchArticles(refresh: true),
+              color: kExArtMain,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 14),
+                    buildCategoryTabs(),
+                    const SizedBox(height: 14),
+                    filteredList.isEmpty ? buildEmpty() : buildArticleList(filteredList),
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
             ),
           ),
@@ -311,7 +241,7 @@ class ExpertArticlePageState extends State<ExpertArticlePage> {
           MaterialPageRoute(
             builder: (_) => ExpertTulisArtikelPage(),
           ),
-        ),
+        ).then((_) => setState(() {})),
         child: const Icon(
           Icons.add,
           color: Colors.white,
@@ -529,13 +459,13 @@ class ExpertArticlePageState extends State<ExpertArticlePage> {
   }
 
   // ── Article List ──────────────────────────────────────────────────────────
-  Widget buildArticleList() {
+  Widget buildArticleList(List<ExpertArticleItem> list) {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: filtered.length,
-      itemBuilder: (ctx, i) => buildArticleCard(filtered[i]),
+      itemCount: list.length,
+      itemBuilder: (ctx, i) => buildArticleCard(list[i]),
     );
   }
 

@@ -1,6 +1,10 @@
 import 'dart:io' as dartio;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../providers/article_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../utils/model_converter.dart';
 import 'expert_artikel.dart';
 import 'expert_detail_artikel.dart';
 import 'expert_home.dart' hide ExpertAccountPage;
@@ -34,6 +38,9 @@ class ExpertMyArticlePageState extends State<ExpertMyArticlePage> {
     searchCtrl.addListener(() {
       setState(() => searchQuery = searchCtrl.text.trim().toLowerCase());
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ArticleProvider>(context, listen: false).fetchMyArticles(refresh: true);
+    });
   }
 
   @override
@@ -42,8 +49,13 @@ class ExpertMyArticlePageState extends State<ExpertMyArticlePage> {
     super.dispose();
   }
 
-  List<ExpertArticleItem> get myArticles =>
-      allExpertArticles.where((a) => a.isMine).toList();
+  List<ExpertArticleItem> get myArticles {
+    final articleProvider = Provider.of<ArticleProvider>(context);
+    final expert = Provider.of<AuthProvider>(context, listen: false).user;
+    return articleProvider.myArticles
+        .map((a) => ModelConverter.articleToExpertArticleItem(a, expert?.id))
+        .toList();
+  }
 
   List<ExpertArticleItem> get filtered {
     return myArticles.where((a) {
@@ -120,24 +132,35 @@ class ExpertMyArticlePageState extends State<ExpertMyArticlePage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         Navigator.pop(ctx);
-                        setState(() {
-                          allExpertArticles
-                              .removeWhere((a) => a.id == article.id);
-                          expertBookmarkedIds.remove(article.id);
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Article deleted.',
-                                style: GoogleFonts.outfit(fontSize: 13)),
-                            backgroundColor: kMyArtMain,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
+                        final articleProvider = Provider.of<ArticleProvider>(context, listen: false);
+                        final success = await articleProvider.deleteArticle(int.parse(article.id));
+                        if (success) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Article deleted.',
+                                  style: GoogleFonts.outfit(fontSize: 13)),
+                              backgroundColor: kMyArtMain,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(articleProvider.errorMessage ?? 'Failed to delete article.',
+                                  style: GoogleFonts.outfit(fontSize: 13)),
+                              backgroundColor: Colors.redAccent,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.redAccent,

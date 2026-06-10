@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
+import '../../providers/consultation_provider.dart';
+import '../../utils/model_converter.dart';
+import '../../models/consultation_model.dart';
 import 'expert_home.dart' hide ExpertAccountPage;
 import 'expert_artikel.dart';
 import 'expert_setting.dart';
@@ -57,125 +61,7 @@ class ExpertConsultItem {
   });
 }
 
-// ─── Dummy Data ───────────────────────────────────────────────────────────────
-// Requested dan Active dibuat sama karena ini dari sisi ahli.
-// Completed yang lebih lama boleh beda karena bisa dianggap tarif lama.
-final List<ExpertConsultItem> requestedConsults = [
-  ExpertConsultItem(
-    id: 'r1',
-    clientName: 'Isyana Saraswati',
-    clientAvatar: 'https://randomuser.me/api/portraits/women/65.jpg',
-    lastMessage: '',
-    time: '10m ago',
-    isOnline: true,
-    isRead: false,
-    topic: 'Monstera leaf yellowing',
-    sessionFee: 45000,
-    category: 'Ornamental Plants',
-  ),
-  ExpertConsultItem(
-    id: 'r2',
-    clientName: 'Fathir LKMM TM',
-    clientAvatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-    lastMessage: '',
-    time: '2h ago',
-    isOnline: true,
-    isRead: false,
-    topic: 'Drip irrigation setup',
-    sessionFee: 45000,
-    category: 'Vegetables & Food Crops',
-  ),
-  ExpertConsultItem(
-    id: 'r3',
-    clientName: 'Pilemon',
-    clientAvatar: 'https://randomuser.me/api/portraits/men/11.jpg',
-    lastMessage: '',
-    time: 'Yesterday',
-    isOnline: false,
-    isRead: true,
-    topic: 'Basil wilting issue',
-    sessionFee: 45000,
-    category: 'Herbs & Spices',
-  ),
-];
 
-final List<ExpertConsultItem> activeConsults = [
-  ExpertConsultItem(
-    id: 'a1',
-    clientName: 'Adela Ulin',
-    clientAvatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-    lastMessage: 'Those leaf patterns indicate a nutrient deficiency.',
-    time: 'Mar 12',
-    isOnline: true,
-    isRead: true,
-    topic: 'Leaf pattern diagnosis',
-    sessionFee: 45000,
-    category: 'Ornamental Plants',
-  ),
-  ExpertConsultItem(
-    id: 'a2',
-    clientName: 'Radhin Infest',
-    clientAvatar: 'https://randomuser.me/api/portraits/men/55.jpg',
-    lastMessage: 'Current market trends show organic methods are preferred.',
-    time: 'Mar 10',
-    isOnline: false,
-    isRead: false,
-    topic: 'Organic farming advice',
-    sessionFee: 45000,
-    category: 'Vegetables & Food Crops',
-  ),
-  ExpertConsultItem(
-    id: 'a3',
-    clientName: 'Saputri',
-    clientAvatar: 'https://randomuser.me/api/portraits/women/76.jpg',
-    lastMessage: 'Perfect! The pH levels are now optimal.',
-    time: 'Mar 8',
-    isOnline: false,
-    isRead: true,
-    topic: 'Soil pH management',
-    sessionFee: 45000,
-    category: 'Fruit Plants',
-  ),
-];
-
-final List<ExpertConsultItem> completedConsults = [
-  ExpertConsultItem(
-    id: 'c1',
-    clientName: 'Michael Torres',
-    clientAvatar: 'https://randomuser.me/api/portraits/men/70.jpg',
-    lastMessage: 'Thank you so much! My orchid is recovering.',
-    time: 'Mar 5',
-    isOnline: false,
-    isRead: true,
-    topic: 'Orchid root rot treatment',
-    sessionFee: 45000,
-    category: 'Ornamental Plants',
-  ),
-  ExpertConsultItem(
-    id: 'c2',
-    clientName: 'Emma Williams',
-    clientAvatar: 'https://randomuser.me/api/portraits/women/68.jpg',
-    lastMessage: 'The watering schedule worked perfectly!',
-    time: 'Feb 28',
-    isOnline: false,
-    isRead: true,
-    topic: 'Hydroponic lettuce care',
-    sessionFee: 40000,
-    category: 'Vegetables & Food Crops',
-  ),
-  ExpertConsultItem(
-    id: 'c3',
-    clientName: 'James Anderson',
-    clientAvatar: 'https://randomuser.me/api/portraits/men/41.jpg',
-    lastMessage: 'Great advice on the pruning technique.',
-    time: 'Feb 20',
-    isOnline: false,
-    isRead: true,
-    topic: 'Rose bush pruning',
-    sessionFee: 40000,
-    category: 'Ornamental Plants',
-  ),
-];
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 class ExpertConsultPage extends StatefulWidget {
@@ -208,6 +94,10 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
         searchQuery = searchCtrl.text.trim().toLowerCase();
       });
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ConsultationProvider>(context, listen: false).fetchExpertConsultations(refresh: true);
+    });
   }
 
   @override
@@ -217,18 +107,22 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
   }
 
   List<ExpertConsultItem> get currentList {
-    List<ExpertConsultItem> base;
+    final provider = Provider.of<ConsultationProvider>(context);
+    final expertConsultations = provider.expertConsultations;
 
+    List<Consultation> filterList;
     switch (tabIndex) {
       case 0:
-        base = requestedConsults;
+        filterList = expertConsultations.where((c) => c.status == 'waiting_verification').toList();
         break;
       case 1:
-        base = activeConsults;
+        filterList = expertConsultations.where((c) => c.status == 'active').toList();
         break;
       default:
-        base = completedConsults;
+        filterList = expertConsultations.where((c) => c.status == 'completed').toList();
     }
+
+    final base = filterList.map((c) => ModelConverter.consultationToExpertConsultItem(c)).toList();
 
     if (searchQuery.isEmpty) return base;
 
@@ -286,6 +180,7 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
           context,
           MaterialPageRoute(
             builder: (ctx) => ExpertChatPage(
+              consultationId: item.id,
               clientName: item.clientName,
               clientAvatar: item.clientAvatar,
               topic: item.topic,
@@ -456,10 +351,17 @@ class ExpertConsultPageState extends State<ExpertConsultPage> {
   }
 
   Widget buildTabBar() {
+    final provider = Provider.of<ConsultationProvider>(context);
+    final expertConsultations = provider.expertConsultations;
+
+    final requestedCount = expertConsultations.where((c) => c.status == 'waiting_verification').length;
+    final activeCount = expertConsultations.where((c) => c.status == 'active').length;
+    final completedCount = expertConsultations.where((c) => c.status == 'completed').length;
+
     final tabs = [
-      _TabInfo('Requested', requestedConsults.length, Colors.orange),
-      _TabInfo('Active', activeConsults.length, kExConMain),
-      _TabInfo('Completed', completedConsults.length, Colors.grey.shade500),
+      _TabInfo('Requested', requestedCount, Colors.orange),
+      _TabInfo('Active', activeCount, kExConMain),
+      _TabInfo('Completed', completedCount, Colors.grey.shade500),
     ];
 
     return Padding(

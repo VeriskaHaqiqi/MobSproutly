@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
+import '../../providers/auth_provider.dart';
 import 'expert_home.dart' hide ExpertAccountPage;
 import 'expert_artikel.dart';
 import 'expert_consult.dart';
@@ -13,13 +15,7 @@ const Color kPayBlue = Color(0xFF76D7EA);
 const Color kPayLGreen = Color(0xFFD0FF99);
 const Color kPayScaffold = Color(0xFFF0F4F3);
 
-// ─── Global payment state ─────────────────────────────────────────────────────
-class ExpertPaymentMethod {
-  static String bankName = '';
-  static String holderName = '';
-  static String accountNumber = '';
-  static bool isSet = false;
-}
+// ─── Global payment state removed ─────────────────────────────────────────────────────
 
 class ExpertMetodePembayaranPage extends StatefulWidget {
   const ExpertMetodePembayaranPage({super.key});
@@ -55,10 +51,14 @@ class _ExpertMetodePembayaranPageState
   void initState() {
     super.initState();
 
-    if (ExpertPaymentMethod.isSet) {
-      _bankCtrl.text = ExpertPaymentMethod.bankName;
-      _holderCtrl.text = ExpertPaymentMethod.holderName;
-      _accountCtrl.text = ExpertPaymentMethod.accountNumber;
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    final profile = user?.expertProfile;
+    final hasBank = profile != null && profile.bankName != null && profile.bankName!.isNotEmpty;
+
+    if (hasBank) {
+      _bankCtrl.text = profile.bankName!;
+      _holderCtrl.text = profile.accountHolder ?? '';
+      _accountCtrl.text = profile.accountNumber ?? '';
     }
 
     _bankCtrl.addListener(() => setState(() {}));
@@ -79,7 +79,7 @@ class _ExpertMetodePembayaranPageState
       _holderCtrl.text.isNotEmpty ||
       _accountCtrl.text.isNotEmpty;
 
-  void _handleSave() {
+  void _handleSave() async {
     setState(() {
       bankErr = _bankCtrl.text.trim().isEmpty ? 'Bank name is required' : null;
 
@@ -98,18 +98,25 @@ class _ExpertMetodePembayaranPageState
 
     setState(() => isSaving = true);
 
-    Future.delayed(const Duration(milliseconds: 900), () {
-      if (!mounted) return;
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final success = await auth.updateBankAccount(
+      bankName: _bankCtrl.text.trim(),
+      accountHolder: _holderCtrl.text.trim(),
+      accountNumber: _accountCtrl.text.trim(),
+    );
 
-      ExpertPaymentMethod.bankName = _bankCtrl.text.trim();
-      ExpertPaymentMethod.holderName = _holderCtrl.text.trim();
-      ExpertPaymentMethod.accountNumber = _accountCtrl.text.trim();
-      ExpertPaymentMethod.isSet = true;
-
+    if (mounted) {
       setState(() => isSaving = false);
-
-      _showSuccessDialog();
-    });
+      if (success) {
+        _showSuccessDialog();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(auth.errorMessage ?? 'Failed to update payment method.'),
+          ),
+        );
+      }
+    }
   }
 
   void _handleRemove() {
@@ -182,7 +189,15 @@ class _ExpertMetodePembayaranPageState
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        final auth = Provider.of<AuthProvider>(context, listen: false);
+                        await auth.updateBankAccount(
+                          bankName: '',
+                          accountHolder: '',
+                          accountNumber: '',
+                        );
+
+                        if (!mounted) return;
                         Navigator.pop(ctx);
 
                         setState(() {
@@ -193,11 +208,6 @@ class _ExpertMetodePembayaranPageState
                           bankErr = null;
                           holderErr = null;
                           accountErr = null;
-
-                          ExpertPaymentMethod.bankName = '';
-                          ExpertPaymentMethod.holderName = '';
-                          ExpertPaymentMethod.accountNumber = '';
-                          ExpertPaymentMethod.isSet = false;
                         });
                       },
                       style: ElevatedButton.styleFrom(
@@ -379,7 +389,7 @@ class _ExpertMetodePembayaranPageState
                   const SizedBox(height: 24),
                   _buildSaveButton(),
                   const SizedBox(height: 12),
-                  if (ExpertPaymentMethod.isSet) _buildRemoveButton(),
+                  if (Provider.of<AuthProvider>(context).user?.expertProfile?.bankName?.isNotEmpty == true) _buildRemoveButton(),
                 ],
               ),
             ),
@@ -576,7 +586,7 @@ class _ExpertMetodePembayaranPageState
           _buildField(
             label: 'Account Holder Name',
             controller: _holderCtrl,
-            hint: 'Dr. Isyana Chen',
+            hint: Provider.of<AuthProvider>(context, listen: false).user?.name ?? 'Account Holder Name',
             icon: Icons.person_outline_rounded,
             errorText: holderErr,
           ),

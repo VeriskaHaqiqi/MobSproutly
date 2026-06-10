@@ -3,7 +3,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'user_pencarian.dart';
 import 'user_chat_locked.dart';
 import 'user_semua_rating.dart';
-
+import 'package:provider/provider.dart';
+import '../../providers/consultation_provider.dart';
+import '../../providers/rating_provider.dart';
+import '../../utils/model_converter.dart';
+import 'user_chat.dart';
+import 'user_pembayaran.dart';
 const Color kAhliTeal = Color(0xFF76EAD0);
 const Color kAhliBlue = Color(0xFF76D7EA);
 const Color kAhliMain = Color(0xFF5DCFCF);
@@ -12,10 +17,26 @@ const Color kAhliGreen = Color(0xFF99FF99);
 const Color kAhliYellow = Color(0xFFFFFF9F);
 const Color kAhliScaffold = Color(0xFFF0F4F3);
 
-class UserInformasiAhliScreen extends StatelessWidget {
+class UserInformasiAhliScreen extends StatefulWidget {
   final ExpertItem expert;
 
   const UserInformasiAhliScreen({super.key, required this.expert});
+
+  @override
+  State<UserInformasiAhliScreen> createState() => _UserInformasiAhliScreenState();
+}
+
+class _UserInformasiAhliScreenState extends State<UserInformasiAhliScreen> {
+  ExpertItem get expert => widget.expert;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<RatingProvider>(context, listen: false)
+          .fetchPublicRatings(int.parse(expert.id), refresh: true);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -418,6 +439,9 @@ class UserInformasiAhliScreen extends StatelessWidget {
 
   // ── Reviews Card ──────────────────────────────────────────────────────────
   Widget buildReviewsCard(BuildContext context) {
+    final ratingProvider = Provider.of<RatingProvider>(context);
+    final ratings = ratingProvider.ratings.take(3).toList();
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -458,20 +482,31 @@ class UserInformasiAhliScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          ...expert.reviews.asMap().entries.map((entry) {
-            final i = entry.key;
-            final review = entry.value;
-            return Column(
-              children: [
-                buildReviewItem(review),
-                if (i < expert.reviews.length - 1) ...[
-                  const SizedBox(height: 8),
-                  Divider(color: Colors.grey.shade100, height: 1),
-                  const SizedBox(height: 8),
+          if (ratingProvider.isLoading && ratings.isEmpty)
+            const Center(child: CircularProgressIndicator(color: kAhliMain))
+          else if (ratings.isEmpty)
+            Text('No reviews yet', style: GoogleFonts.outfit(fontSize: 13, color: Colors.grey.shade500))
+          else
+            ...ratings.asMap().entries.map((entry) {
+              final i = entry.key;
+              final r = entry.value;
+              final review = ReviewItem(
+                name: r.user?.name ?? 'User',
+                avatarUrl: r.user?.photoUrl ?? '',
+                stars: r.score ?? 5,
+                comment: r.comment ?? '',
+              );
+              return Column(
+                children: [
+                  buildReviewItem(review),
+                  if (i < ratings.length - 1) ...[
+                    const SizedBox(height: 8),
+                    Divider(color: Colors.grey.shade100, height: 1),
+                    const SizedBox(height: 8),
+                  ],
                 ],
-              ],
-            );
-          }),
+              );
+            }),
         ],
       ),
     );
@@ -550,12 +585,48 @@ class UserInformasiAhliScreen extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: GestureDetector(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (ctx) => UserChatLockedScreen(expert: expert),
-            ),
-          ),
+          onTap: () {
+            final provider = Provider.of<ConsultationProvider>(context, listen: false);
+            final existing = provider.userConsultations.where(
+              (c) => c.expert?.id.toString() == expert.id
+            ).toList();
+
+            // Sort by latest first if there are multiple
+            existing.sort((a, b) => (b.createdAt ?? DateTime.now()).compareTo(a.createdAt ?? DateTime.now()));
+
+            if (existing.isNotEmpty) {
+              final c = existing.first;
+              if (c.status == 'active') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (ctx) => UserChatScreen(consult: ModelConverter.consultationToConsultItem(c)),
+                  ),
+                );
+              } else if (c.status == 'waiting_payment' || c.status == 'waiting_verification' || c.status == 'rejected') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (ctx) => UserPembayaranScreen(expert: expert, consultationId: c.id),
+                  ),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (ctx) => UserChatLockedScreen(expert: expert),
+                  ),
+                );
+              }
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (ctx) => UserChatLockedScreen(expert: expert),
+                ),
+              );
+            }
+          },
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 16),

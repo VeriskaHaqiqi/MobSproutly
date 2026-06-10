@@ -2,7 +2,10 @@ import 'dart:io' as dartio;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'expert_artikel.dart';
-
+import 'package:provider/provider.dart';
+import '../../providers/article_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../utils/model_converter.dart';
 const Color kExDetMain = Color(0xFF5DCFCF);
 const Color kExDetTeal = Color(0xFF76EAD0);
 const Color kExDetBlue = Color(0xFF76D7EA);
@@ -67,6 +70,10 @@ class ExpertDetailArtikelPageState extends State<ExpertDetailArtikelPage> {
   }
 
   List<ExpertArticleItem> get recommendedArticles {
+    final provider = Provider.of<ArticleProvider>(context, listen: false);
+    final userProvider = Provider.of<AuthProvider>(context, listen: false);
+    final allExpertArticles = provider.articles.map((a) => ModelConverter.articleToExpertArticleItem(a, userProvider.user?.id)).toList();
+    
     final same = allExpertArticles
         .where((a) =>
             a.id != widget.article.id && a.category == widget.article.category)
@@ -161,7 +168,7 @@ class ExpertDetailArtikelPageState extends State<ExpertDetailArtikelPage> {
 
   void deleteArticle() {
     // Remove from global lists
-    allExpertArticles.removeWhere((a) => a.id == widget.article.id);
+    Provider.of<ArticleProvider>(context, listen: false).deleteArticle(int.parse(widget.article.id));
     expertBookmarkedIds.remove(widget.article.id);
 
     showDialog(

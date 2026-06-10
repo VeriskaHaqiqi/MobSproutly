@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../app_colors.dart';
 import '../../app_widgets.dart';
+import '../../providers/auth_provider.dart';
 import 'login_screen.dart';
 import 'expert_register.dart';
 
@@ -31,8 +33,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _passVisible = false;
   bool _confirmVisible = false;
 
-  bool isValidGmail(String email) =>
-      RegExp(r'^[\w\.-]+@gmail\.com$').hasMatch(email);
+  bool isValidEmail(String email) =>
+      RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$').hasMatch(email);
 
   bool isValidPhone(String phone) {
     final digits = phone.replaceAll(RegExp(r'[^\d]'), '');
@@ -53,7 +55,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _handleRegister() {
+  void _handleRegister() async {
     setState(() {
       // Name
       _nameErr = _nameCtrl.text.trim().isEmpty ? 'Full name is required' : null;
@@ -61,8 +63,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // Email
       if (_emailCtrl.text.trim().isEmpty) {
         _emailErr = 'Email is required';
-      } else if (!isValidGmail(_emailCtrl.text.trim())) {
-        _emailErr = 'Please use a @gmail.com address';
+      } else if (!isValidEmail(_emailCtrl.text.trim())) {
+        _emailErr = 'Please enter a valid email address';
       } else {
         _emailErr = null;
       }
@@ -101,15 +103,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _passErr != null ||
         _confirmErr != null) return;
 
-    Navigator.of(context).pushAndRemoveUntil(
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const LoginScreen(),
-        transitionsBuilder: (_, animation, __, child) =>
-            FadeTransition(opacity: animation, child: child),
-        transitionDuration: const Duration(milliseconds: 400),
-      ),
-      (route) => false,
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final result = await authProvider.registerUser(
+      name: _nameCtrl.text.trim(),
+      email: _emailCtrl.text.trim(),
+      phone: _phoneCtrl.text.trim(),
+      gender: _selectedGender,
+      password: _passCtrl.text,
     );
+
+    if (!mounted) return;
+
+    if (result['success']) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Registration successful!'),
+          backgroundColor: AppColors.teal,
+        ),
+      );
+      Navigator.of(context).pushAndRemoveUntil(
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => const LoginScreen(),
+          transitionsBuilder: (_, animation, __, child) =>
+              FadeTransition(opacity: animation, child: child),
+          transitionDuration: const Duration(milliseconds: 400),
+        ),
+        (route) => false,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Registration failed'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 
   void _goToExpertRegister() {

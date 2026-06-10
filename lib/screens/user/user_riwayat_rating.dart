@@ -4,7 +4,11 @@ import 'user_home.dart';
 import 'user_artikel.dart';
 import 'user_consult.dart';
 import 'user_setting.dart';
-
+import 'package:provider/provider.dart';
+import '../../providers/rating_provider.dart';
+import '../../providers/consultation_provider.dart';
+import '../../models/rating_model.dart';
+import '../../utils/model_converter.dart';
 const Color kRatTeal = Color(0xFF76EAD0);
 const Color kRatBlue = Color(0xFF76D7EA);
 const Color kRatMain = Color(0xFF5DCFCF);
@@ -31,64 +35,6 @@ class RatingItem {
   });
 }
 
-// ─── Dummy Data ───────────────────────────────────────────────────────────────
-final List<RatingItem> allRatings = [
-  RatingItem(
-    id: '1',
-    expertName: 'Dr. Sarah Chen',
-    specialty: 'Plant Disease Specialist',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=150&q=80',
-    consultDate: 'Dec 15, 2024',
-    rating: 4.0,
-    reviewText: 'Very helpful with my orchid issues!',
-  ),
-  RatingItem(
-    id: '2',
-    expertName: 'Dr. Marcus Rodriguez',
-    specialty: 'Indoor Plant Expert',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80',
-    consultDate: 'Dec 12, 2024',
-  ),
-  RatingItem(
-    id: '3',
-    expertName: 'Dr. Emily Watson',
-    specialty: 'Succulent Specialist',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80',
-    consultDate: 'Dec 10, 2024',
-    rating: 5.0,
-    reviewText: 'Outstanding advice on my succulent collection!',
-  ),
-  RatingItem(
-    id: '4',
-    expertName: 'Dr. James Thompson',
-    specialty: 'Garden Design Expert',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&q=80',
-    consultDate: 'Dec 8, 2024',
-  ),
-  RatingItem(
-    id: '5',
-    expertName: 'Dr. Lisa Park',
-    specialty: 'Herb Garden Specialist',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&q=80',
-    consultDate: 'Dec 5, 2024',
-    rating: 3.0,
-    reviewText: 'Good tips but could be more detailed.',
-  ),
-  RatingItem(
-    id: '6',
-    expertName: 'Dr. Alex Kumar',
-    specialty: 'Tropical Plant Expert',
-    avatarUrl:
-        'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&q=80',
-    consultDate: 'Dec 3, 2024',
-  ),
-];
-
 // ─── Screen ───────────────────────────────────────────────────────────────────
 class UserRiwayatRatingScreen extends StatefulWidget {
   const UserRiwayatRatingScreen({super.key});
@@ -102,10 +48,46 @@ class UserRiwayatRatingScreenState extends State<UserRiwayatRatingScreen> {
   int navIndex = 3;
   bool showRated = false; // false = Pending tab, true = My Ratings tab
 
-  List<RatingItem> get unrated =>
-      allRatings.where((r) => r.rating == null).toList();
-  List<RatingItem> get rated =>
-      allRatings.where((r) => r.rating != null).toList();
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ConsultationProvider>(context, listen: false).fetchUserConsultations(refresh: true);
+      Provider.of<RatingProvider>(context, listen: false).fetchUserRatings(refresh: true);
+    });
+  }
+
+  String _formatDate(DateTime? dt) {
+    if (dt == null) return 'Recently';
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+  }
+
+  List<RatingItem> _getAllItems() {
+    final consultProv = Provider.of<ConsultationProvider>(context);
+    
+    final completed = consultProv.userConsultations.where((c) => c.status == 'completed');
+    
+    return completed.map((c) {
+      final ratingObj = c.rating;
+      final expert = c.expert;
+      final avatar = expert != null ? ModelConverter.getUserAvatar(expert) : 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80';
+      final specialty = (expert?.specializations != null && expert!.specializations!.isNotEmpty) ? expert.specializations!.first.name : 'Botanist';
+      
+      return RatingItem(
+        id: c.id.toString(),
+        expertName: expert?.name ?? 'Expert Botanist',
+        specialty: specialty,
+        avatarUrl: avatar,
+        consultDate: c.createdAt != null ? _formatDate(c.createdAt) : 'Recently',
+        rating: ratingObj?.score.toDouble(),
+        reviewText: ratingObj?.comment,
+      );
+    }).toList();
+  }
+
+  List<RatingItem> get unrated => _getAllItems().where((r) => r.rating == null).toList();
+  List<RatingItem> get rated => _getAllItems().where((r) => r.rating != null).toList();
 
   // ── Rating dialog (only for unrated items) ────────────────────────────────
   void showRatingDialog(RatingItem item) {
@@ -242,31 +224,47 @@ class UserRiwayatRatingScreenState extends State<UserRiwayatRatingScreen> {
                 ),
                 const SizedBox(height: 18),
 
-                // Rate Now
                 GestureDetector(
                   onTap: tempStars == 0
                       ? null
-                      : () {
+                      : () async {
                           Navigator.pop(ctx);
-                          setState(() {
-                            item.rating = tempStars.toDouble();
-                            item.reviewText = reviewCtrl.text.trim().isEmpty
-                                ? null
-                                : reviewCtrl.text.trim();
-                            // Auto-switch to My Ratings tab after rating
-                            showRated = true;
-                          });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Thanks for your rating!',
-                                  style: GoogleFonts.outfit(fontSize: 13)),
-                              backgroundColor: kRatMain,
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
-                              duration: const Duration(seconds: 2),
-                            ),
+                          final success = await Provider.of<RatingProvider>(context, listen: false).submitRating(
+                            consultationId: int.parse(item.id),
+                            score: tempStars,
+                            comment: reviewCtrl.text.trim().isEmpty ? null : reviewCtrl.text.trim(),
                           );
+                          if (success && mounted) {
+                            // Refresh consultations so the new rating appears
+                            Provider.of<ConsultationProvider>(context, listen: false).fetchUserConsultations(refresh: true);
+                            setState(() {
+                              showRated = true;
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Thanks for your rating!',
+                                    style: GoogleFonts.outfit(fontSize: 13)),
+                                backgroundColor: kRatMain,
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          } else if (mounted) {
+                            final err = Provider.of<RatingProvider>(context, listen: false).errorMessage ?? 'Failed to submit rating';
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(err,
+                                    style: GoogleFonts.outfit(fontSize: 13)),
+                                backgroundColor: Colors.redAccent,
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          }
                         },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
@@ -367,12 +365,16 @@ class UserRiwayatRatingScreenState extends State<UserRiwayatRatingScreen> {
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.pop(ctx);
-                        setState(() {
-                          item.rating = null;
-                          item.reviewText = null;
-                          // Switch back to pending tab
-                          if (rated.isEmpty) showRated = false;
-                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Removing rating is not supported.',
+                                style: GoogleFonts.outfit(fontSize: 13)),
+                            backgroundColor: Colors.grey.shade800,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.redAccent,
@@ -492,7 +494,7 @@ class UserRiwayatRatingScreenState extends State<UserRiwayatRatingScreen> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  '${rated.length}/${allRatings.length} rated',
+                  '${rated.length}/${rated.length + unrated.length} rated',
                   style: GoogleFonts.outfit(
                       fontSize: 12,
                       color: Colors.white,

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../providers/article_provider.dart';
+import '../../utils/model_converter.dart';
 import 'user_artikel.dart';
 import 'user_detail_artikel.dart';
 import 'user_home.dart';
@@ -44,6 +47,9 @@ class UserBookmarkArtikelScreenState extends State<UserBookmarkArtikelScreen> {
     searchCtrl.addListener(() {
       setState(() => searchQuery = searchCtrl.text.trim().toLowerCase());
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ArticleProvider>(context, listen: false).fetchBookmarks(refresh: true);
+    });
   }
 
   @override
@@ -53,15 +59,14 @@ class UserBookmarkArtikelScreenState extends State<UserBookmarkArtikelScreen> {
   }
 
   List<ArticleItem> get bookmarked {
-    return allArticles
-        .where((a) => globalBookmarkedIds.contains(a.id))
-        .toList();
+    final rawBookmarks = Provider.of<ArticleProvider>(context).bookmarkedArticles;
+    return rawBookmarks.map((a) => ModelConverter.articleToItem(a)).toList();
   }
 
   List<ArticleItem> get filtered {
     return bookmarked.where((a) {
       final matchCat =
-          selectedCategory == 'All' || a.category == selectedCategory;
+          selectedCategory == 'All' || a.category.toLowerCase() == selectedCategory.toLowerCase();
       final matchSearch = searchQuery.isEmpty ||
           a.title.toLowerCase().contains(searchQuery) ||
           a.author.toLowerCase().contains(searchQuery) ||
@@ -72,7 +77,13 @@ class UserBookmarkArtikelScreenState extends State<UserBookmarkArtikelScreen> {
 
   List<ArticleItem> get displayed => filtered.take(displayCount).toList();
 
-  void removeBookmark(ArticleItem article) {
+  void removeBookmark(ArticleItem article) async {
+    final articleProvider = Provider.of<ArticleProvider>(context, listen: false);
+    final realArticle = articleProvider.bookmarkedArticles.firstWhere(
+      (a) => a.id.toString() == article.id,
+      orElse: () => throw Exception('Article not found'),
+    );
+    await articleProvider.toggleBookmark(realArticle);
     setState(() {
       globalBookmarkedIds.remove(article.id);
       article.isBookmarked = false;
@@ -399,9 +410,9 @@ class UserBookmarkArtikelScreenState extends State<UserBookmarkArtikelScreen> {
                       ),
                     ),
                     const SizedBox(height: 5),
-                    // Snippet (dummy)
+                    // Snippet
                     Text(
-                      'Learn essential care tips and expert advice on growing healthy ${article.category.toLowerCase()} plants.',
+                      article.content.isNotEmpty ? article.content : 'Learn essential care tips and expert advice on growing healthy ${article.category.toLowerCase()} plants.',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.outfit(

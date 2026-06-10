@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:provider/provider.dart';
 import '../../app_colors.dart';
 import '../../app_widgets.dart';
+import '../../providers/auth_provider.dart';
 import 'login_screen.dart';
 
 class ExpertRegisterScreen extends StatefulWidget {
@@ -48,8 +50,8 @@ class _ExpertRegisterScreenState extends State<ExpertRegisterScreen> {
   List<String> _certificateFiles = [];
   String? _diplomaFile;
 
-  bool isValidGmail(String email) =>
-      RegExp(r'^[\w\.-]+@gmail\.com$').hasMatch(email);
+  bool isValidEmail(String email) =>
+      RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$').hasMatch(email);
 
   // Nomor telepon: minimal 9 digit, maksimal 15 digit, hanya angka (boleh awali +)
   bool isValidPhone(String phone) {
@@ -117,14 +119,14 @@ class _ExpertRegisterScreenState extends State<ExpertRegisterScreen> {
   }
 
   // ── Validate & Submit ─────────────────────────────────────────────────────────
-  void _handleSubmit() {
+  void _handleSubmit() async {
     setState(() {
       _nameErr = _nameCtrl.text.trim().isEmpty ? 'Full name is required' : null;
 
       if (_emailCtrl.text.trim().isEmpty) {
         _emailErr = 'Email is required';
-      } else if (!isValidGmail(_emailCtrl.text.trim())) {
-        _emailErr = 'Please use a @gmail.com address';
+      } else if (!isValidEmail(_emailCtrl.text.trim())) {
+        _emailErr = 'Please enter a valid email address';
       } else {
         _emailErr = null;
       }
@@ -201,7 +203,33 @@ class _ExpertRegisterScreenState extends State<ExpertRegisterScreen> {
         _passErr != null ||
         _confirmErr != null) return;
 
-    _showVerificationDialog();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final result = await authProvider.registerExpert({
+      'name': _nameCtrl.text.trim(),
+      'email': _emailCtrl.text.trim(),
+      'phone': _phoneCtrl.text.trim(),
+      'gender': _selectedGender,
+      'password': _passCtrl.text.trim(),
+      'password_confirmation': _confirmCtrl.text.trim(),
+      'university': _almaMaterCtrl.text.trim(),
+      'years_of_experience': int.parse(_expCtrl.text.trim()),
+      'bank_name': _bankNameCtrl.text.trim(),
+      'account_holder': _bankHolderCtrl.text.trim(),
+      'account_number': _bankNumberCtrl.text.trim(),
+    });
+
+    if (!mounted) return;
+
+    if (result['success']) {
+      _showVerificationDialog();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Expert registration failed'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 
   void _showVerificationDialog() {

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../app_colors.dart';
 import '../../app_widgets.dart';
+import '../../services/auth_service.dart';
+import 'input_password_baru.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -12,6 +14,7 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _emailCtrl = TextEditingController();
+  final AuthService _authService = AuthService();
   String? _emailErr;
   bool _isSending = false;
 
@@ -33,8 +36,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return '${h}h ${m}m';
   }
 
-  bool isValidGmail(String email) =>
-      RegExp(r'^[\w\.-]+@gmail\.com$').hasMatch(email);
+  bool isValidEmail(String email) =>
+      RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$').hasMatch(email);
 
   @override
   void dispose() {
@@ -42,14 +45,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  void _handleSend() {
+  void _handleSend() async {
     final email = _emailCtrl.text.trim();
 
     setState(() {
       if (email.isEmpty) {
         _emailErr = 'Email is required';
-      } else if (!isValidGmail(email)) {
-        _emailErr = 'Please use a @gmail.com address';
+      } else if (!isValidEmail(email)) {
+        _emailErr = 'Please enter a valid email address';
       } else {
         _emailErr = null;
       }
@@ -59,16 +62,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     setState(() => _isSending = true);
 
-    // Simulate network request
-    Future.delayed(const Duration(milliseconds: 1400), () {
-      if (!mounted) return;
+    final result = await _authService.forgotPassword(email);
+
+    if (!mounted) return;
+    setState(() => _isSending = false);
+
+    if (result['success']) {
       setState(() {
-        _isSending = false;
         _linkSent = true;
         _sentAt = DateTime.now();
       });
       _showSuccessDialog(email);
-    });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Request failed'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 
   void _showSuccessDialog(String email) {
@@ -190,11 +202,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
               const SizedBox(height: 22),
 
-              // Back to login
+              // Set new password
               GestureDetector(
                 onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.pop(context);
+                  Navigator.pop(ctx); // Close dialog
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => SetNewPasswordScreen(email: email),
+                    ),
+                  );
                 },
                 child: Container(
                   width: double.infinity,
@@ -214,7 +231,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                     ],
                   ),
-                  child: Text('Back to Login',
+                  child: Text('Set New Password',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.outfit(
                           fontSize: 14,

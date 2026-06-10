@@ -3,7 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
+import '../../providers/chat_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/rating_provider.dart';
+import '../../utils/model_converter.dart';
 import 'user_consult.dart';
 
 const Color kChatTeal = Color(0xFF76EAD0);
@@ -34,43 +39,6 @@ class ChatMessage {
   });
 }
 
-List<ChatMessage> buildDummyMessages(ConsultItem consult) {
-  return [
-    ChatMessage(
-      text:
-          "Hi! I'm ${consult.expertName.split(' ').first}, your plant expert for today. Can you tell me more about the symptoms you've noticed?",
-      isMe: false,
-      time: '2:34 PM',
-    ),
-    const ChatMessage(
-      text:
-          'The leaves are turning yellow and have brown spots. It started about a week ago.',
-      isMe: true,
-      time: '2:35 PM',
-    ),
-    const ChatMessage(
-      text:
-          'That sounds like it could be overwatering or a fungal issue. Could you send me a photo of the affected leaves?',
-      isMe: false,
-      time: '2:36 PM',
-    ),
-    const ChatMessage(
-      type: MessageType.image,
-      mediaUrl:
-          'https://images.unsplash.com/photo-1591857177580-dc82b9ac4e1e?w=500&q=80',
-      text: "Here's the worst affected leaf",
-      isMe: true,
-      time: '2:38 PM',
-    ),
-    const ChatMessage(
-      text:
-          "Perfect! I can see this is likely overwatering combined with poor drainage. Let's start treatment immediately.",
-      isMe: false,
-      time: '2:40 PM',
-    ),
-  ];
-}
-
 class UserChatScreen extends StatefulWidget {
   final ConsultItem consult;
 
@@ -88,26 +56,12 @@ class UserChatScreenState extends State<UserChatScreen> {
   final ScrollController scrollCtrl = ScrollController();
   final ImagePicker picker = ImagePicker();
 
-  late List<ChatMessage> messages;
   bool hasText = false;
-  int replyIndex = 0;
-
-  static const List<String> expertReplies = [
-    "Thank you for sharing that. Based on what you've described, I'd recommend reducing your watering frequency and checking the drainage holes.",
-    "That sounds like a common issue with indoor plants. Let the soil dry slightly before the next watering.",
-    "The symptoms may indicate early root stress. Try checking the roots and removing any dark or mushy parts.",
-    "For this type of plant, bright indirect light is usually best. Avoid direct afternoon sun.",
-    "Please keep monitoring the new growth. Healthy new leaves are a good sign of recovery.",
-    "If you can, send another photo from the top and side of the plant so I can check the overall condition.",
-    "You can also wipe the leaves gently with a damp cloth to remove dust and improve photosynthesis.",
-    "This may also be related to pests. Check the underside of the leaves for tiny insects or webbing.",
-  ];
+  int _prevMessageCount = 0;
 
   @override
   void initState() {
     super.initState();
-
-    messages = buildDummyMessages(widget.consult);
 
     msgCtrl.addListener(() {
       setState(() {
@@ -116,12 +70,16 @@ class UserChatScreenState extends State<UserChatScreen> {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ChatProvider>(context, listen: false).startPolling(int.parse(widget.consult.id));
       scrollToBottom();
     });
   }
 
   @override
   void dispose() {
+    try {
+      Provider.of<ChatProvider>(context, listen: false).stopPolling();
+    } catch (_) {}
     msgCtrl.dispose();
     scrollCtrl.dispose();
     super.dispose();
@@ -150,49 +108,17 @@ class UserChatScreenState extends State<UserChatScreen> {
     return '$hour:$minute $period';
   }
 
-  void triggerAutoReply() {
-    final reply = expertReplies[replyIndex % expertReplies.length];
-    replyIndex++;
-
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      if (!mounted) return;
-
-      setState(() {
-        messages.add(
-          ChatMessage(
-            text: reply,
-            isMe: false,
-            time: currentTime(),
-          ),
-        );
-      });
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        scrollToBottom();
-      });
-    });
-  }
-
-  void sendText() {
+  void sendText() async {
     final text = msgCtrl.text.trim();
     if (text.isEmpty) return;
 
-    setState(() {
-      messages.add(
-        ChatMessage(
-          text: text,
-          isMe: true,
-          time: currentTime(),
-        ),
-      );
-      msgCtrl.clear();
-    });
+    msgCtrl.clear();
+    final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+    await chatProvider.sendMessage(int.parse(widget.consult.id), text: text);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       scrollToBottom();
     });
-
-    triggerAutoReply();
   }
 
   Future<void> pickImage() async {
@@ -204,22 +130,15 @@ class UserChatScreenState extends State<UserChatScreen> {
 
       if (file == null) return;
 
-      setState(() {
-        messages.add(
-          ChatMessage(
-            type: MessageType.image,
-            mediaFile: File(file.path),
-            isMe: true,
-            time: currentTime(),
-          ),
-        );
-      });
+      final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+      await chatProvider.sendMessage(
+        int.parse(widget.consult.id),
+        attachmentPath: file.path,
+      );
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         scrollToBottom();
       });
-
-      triggerAutoReply();
     } catch (_) {}
   }
 
@@ -231,23 +150,15 @@ class UserChatScreenState extends State<UserChatScreen> {
 
       if (file == null) return;
 
-      setState(() {
-        messages.add(
-          ChatMessage(
-            type: MessageType.video,
-            mediaFile: File(file.path),
-            videoDuration: '0:00',
-            isMe: true,
-            time: currentTime(),
-          ),
-        );
-      });
+      final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+      await chatProvider.sendMessage(
+        int.parse(widget.consult.id),
+        attachmentPath: file.path,
+      );
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         scrollToBottom();
       });
-
-      triggerAutoReply();
     } catch (_) {}
   }
 
@@ -602,8 +513,169 @@ class UserChatScreenState extends State<UserChatScreen> {
     );
   }
 
+  void showRatingDialog(int consultationId, String expertName) {
+    int selectedStars = 0;
+    final commentCtrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialog) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          backgroundColor: Colors.white,
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Rate Your Session',
+                      style: GoogleFonts.outfit(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black87)),
+                  const SizedBox(height: 6),
+                  Text(
+                    'How was your consultation\nwith $expertName?',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.outfit(
+                        fontSize: 13, color: Colors.grey.shade500),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (i) {
+                      final star = i + 1;
+                      return GestureDetector(
+                        onTap: () => setDialog(() => selectedStars = star),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Icon(
+                            star <= selectedStars
+                                ? Icons.star_rounded
+                                : Icons.star_outline_rounded,
+                            size: 36,
+                            color: star <= selectedStars
+                                ? const Color(0xFFFFBB00)
+                                : Colors.grey.shade300,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: TextField(
+                      controller: commentCtrl,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        hintText: 'Leave a comment (optional)...',
+                        hintStyle: GoogleFonts.outfit(fontSize: 12, color: Colors.grey),
+                        border: InputBorder.none,
+                      ),
+                      style: GoogleFonts.outfit(fontSize: 13),
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: selectedStars > 0
+                          ? () async {
+                              final ratingProvider = Provider.of<RatingProvider>(context, listen: false);
+                              final success = await ratingProvider.submitRating(
+                                consultationId: consultationId,
+                                score: selectedStars,
+                                comment: commentCtrl.text.trim().isNotEmpty ? commentCtrl.text.trim() : null,
+                              );
+                              if (success) {
+                                Provider.of<ChatProvider>(context, listen: false).fetchMessages(consultationId, silent: true);
+                              }
+                              Navigator.pop(ctx);
+                            }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kChatMain,
+                        disabledBackgroundColor: Colors.grey.shade200,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                        elevation: 0,
+                      ),
+                      child: Text('Submit Rating',
+                          style: GoogleFonts.outfit(
+                              fontSize: 14, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text('Skip',
+                        style: GoogleFonts.outfit(
+                            fontSize: 13, color: Colors.grey.shade400)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final chatProvider = Provider.of<ChatProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
+    final currentUserId = authProvider.user?.id ?? 0;
+
+    final messages = chatProvider.messages.map((m) {
+      final isMe = m.senderId == currentUserId;
+      String timeStr = 'Recently';
+      if (m.createdAt != null) {
+        final localTime = m.createdAt!.toLocal();
+        final hour = localTime.hour > 12
+            ? localTime.hour - 12
+            : localTime.hour == 0
+                ? 12
+                : localTime.hour;
+        final minute = localTime.minute.toString().padLeft(2, '0');
+        final period = localTime.hour >= 12 ? 'PM' : 'AM';
+        timeStr = '$hour:$minute $period';
+      }
+
+      MessageType type = MessageType.text;
+      if (m.messageType == 'image') {
+        type = MessageType.image;
+      } else if (m.messageType == 'video') {
+        type = MessageType.video;
+      }
+
+      String? mediaUrl = m.attachment;
+      if (mediaUrl != null && mediaUrl.isNotEmpty && !mediaUrl.startsWith('http')) {
+        mediaUrl = '${ModelConverter.getBaseUrl()}/storage/$mediaUrl';
+      }
+
+      return ChatMessage(
+        text: m.message,
+        isMe: isMe,
+        time: timeStr,
+        type: type,
+        mediaUrl: mediaUrl,
+      );
+    }).toList();
+
+    if (messages.length != _prevMessageCount) {
+      _prevMessageCount = messages.length;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        scrollToBottom();
+      });
+    }
+
     return Scaffold(
       backgroundColor: kChatScaffold,
       body: Column(
@@ -611,15 +683,17 @@ class UserChatScreenState extends State<UserChatScreen> {
           buildHeader(),
           buildSessionBanner(),
           Expanded(
-            child: ListView.builder(
-              controller: scrollCtrl,
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              physics: const BouncingScrollPhysics(),
-              itemCount: messages.length,
-              itemBuilder: (ctx, i) {
-                return buildMessageItem(messages[i]);
-              },
-            ),
+            child: chatProvider.isLoading && chatProvider.messages.isEmpty
+                ? const Center(child: CircularProgressIndicator(color: kChatMain))
+                : ListView.builder(
+                    controller: scrollCtrl,
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: messages.length,
+                    itemBuilder: (ctx, i) {
+                      return buildMessageItem(messages[i]);
+                    },
+                  ),
           ),
           buildInputBar(),
         ],
@@ -816,6 +890,10 @@ class UserChatScreenState extends State<UserChatScreen> {
   }
 
   Widget buildSessionBanner() {
+    final chatProvider = Provider.of<ChatProvider>(context);
+    final status = chatProvider.consultation?.status ?? (widget.consult.isActive ? 'active' : 'completed');
+    final isActive = status == 'active';
+
     return Column(
       children: [
         buildExpertCard(),
@@ -826,7 +904,7 @@ class UserChatScreenState extends State<UserChatScreen> {
             vertical: 10,
           ),
           decoration: BoxDecoration(
-            color: kChatTeal.withOpacity(0.25),
+            color: isActive ? kChatTeal.withOpacity(0.25) : Colors.grey.withOpacity(0.15),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -834,14 +912,14 @@ class UserChatScreenState extends State<UserChatScreen> {
               Container(
                 width: 8,
                 height: 8,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF4CAF50),
+                decoration: BoxDecoration(
+                  color: isActive ? const Color(0xFF4CAF50) : Colors.grey,
                   shape: BoxShape.circle,
                 ),
               ),
               const SizedBox(width: 8),
               Text(
-                'Session Active',
+                isActive ? 'Session Active' : 'Session Ended',
                 style: GoogleFonts.outfit(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -862,7 +940,7 @@ class UserChatScreenState extends State<UserChatScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(18, 4, 18, 8),
           child: Text(
-            'Send photos or videos for better diagnosis',
+            isActive ? 'Send photos or videos for better diagnosis' : 'This consultation has ended',
             style: GoogleFonts.outfit(
               fontSize: 11,
               color: Colors.grey.shade500,
@@ -1189,6 +1267,83 @@ class UserChatScreenState extends State<UserChatScreen> {
   }
 
   Widget buildInputBar() {
+    final chatProvider = Provider.of<ChatProvider>(context);
+    final isCompleted = chatProvider.consultation?.status == 'completed';
+    final hasRating = chatProvider.consultation?.rating != null;
+
+    if (isCompleted) {
+      return Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, -3),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.lock_outline_rounded, color: Colors.grey.shade400, size: 18),
+                    const SizedBox(width: 10),
+                    Text(
+                      'This consultation has ended',
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!hasRating) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => showRatingDialog(
+                      chatProvider.consultation!.id,
+                      chatProvider.consultation!.expert?.name ?? 'Expert Botanist',
+                    ),
+                    icon: const Icon(Icons.star_rounded, color: Colors.white, size: 18),
+                    label: Text(
+                      'Give Rating & Review',
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kChatMain,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 16),
       decoration: BoxDecoration(
@@ -1276,20 +1431,26 @@ class UserChatScreenState extends State<UserChatScreen> {
             ),
             const SizedBox(width: 8),
             GestureDetector(
-              onTap: sendText,
+              onTap: chatProvider.isSending ? null : sendText,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: hasText ? kChatMain : Colors.grey.shade300,
+                  color: hasText && !chatProvider.isSending ? kChatMain : Colors.grey.shade300,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.send_rounded,
-                  color: Colors.white,
-                  size: 18,
-                ),
+                child: chatProvider.isSending
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(
+                        Icons.send_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
               ),
             ),
           ],

@@ -9,6 +9,8 @@ import 'user_riwayat_pembayaran.dart';
 import 'user_support.dart';
 import 'user_riwayat_rating.dart';
 import '../auth/login_screen.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 const Color kSettingTeal = Color(0xFF76EAD0);
@@ -280,6 +282,8 @@ class UserSettingScreenState extends State<UserSettingScreen> {
 
   // ── Profile Card ─────────────────────────────────────────────────────────────
   Widget buildProfileCard() {
+    final user = Provider.of<AuthProvider>(context).user;
+    
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -309,7 +313,7 @@ class UserSettingScreenState extends State<UserSettingScreen> {
                 ),
                 child: ClipOval(
                   child: Image.network(
-                    'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=200&q=80',
+                    user?.photoUrl ?? 'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=200&q=80',
                     fit: BoxFit.cover,
                     errorBuilder: (ctx, err, stack) {
                       return Container(
@@ -330,7 +334,7 @@ class UserSettingScreenState extends State<UserSettingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Sarah Johnson',
+                      user?.name ?? 'No Name',
                       style: GoogleFonts.outfit(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
@@ -339,7 +343,7 @@ class UserSettingScreenState extends State<UserSettingScreen> {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      'sarah.johnson@gmail.com',
+                      user?.email ?? 'no-email@example.com',
                       style: GoogleFonts.outfit(
                         fontSize: 12,
                         color: Colors.grey.shade500,
@@ -347,7 +351,7 @@ class UserSettingScreenState extends State<UserSettingScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '+1 (555) 123-4567',
+                      user?.phone != null && user!.phone.isNotEmpty ? user.phone : 'No Phone Number',
                       style: GoogleFonts.outfit(
                         fontSize: 12,
                         color: Colors.grey.shade500,

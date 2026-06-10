@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../providers/article_provider.dart';
+import '../../utils/model_converter.dart';
 import 'user_home.dart';
 import 'user_bookmark_artikel.dart';
 import 'user_detail_artikel.dart';
@@ -23,6 +26,7 @@ class ArticleItem {
   final String time;
   final String imageUrl;
   bool isBookmarked;
+  final String content;
 
   ArticleItem({
     required this.id,
@@ -32,104 +36,12 @@ class ArticleItem {
     required this.time,
     required this.imageUrl,
     this.isBookmarked = false,
+    this.content = '',
   });
 }
 
 // ─── 4 Kategori resmi Sproutly ────────────────────────────────────────────────
 // Ornamental Plants | Vegetables & Food Crops | Fruit Plants | Herbs & Spices
-
-final List<ArticleItem> allArticles = [
-  ArticleItem(
-    id: '1',
-    category: 'Indoor Plants',
-    title: 'Complete Guide to Growing Monstera Deliciosa Indoors',
-    author: 'Sarah Johnson',
-    time: '2 days ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80',
-  ),
-  ArticleItem(
-    id: '2',
-    category: 'Hydroponics',
-    title: "Beginner's Guide to Hydroponic Lettuce Farming",
-    author: 'Michael Chen',
-    time: '5 days ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1558449028-b53a39d100fc?auto=format&fit=crop&w=800&q=80',
-  ),
-  ArticleItem(
-    id: '3',
-    category: 'Pest Control',
-    title: 'Natural Ways to Control Aphids Without Chemicals',
-    author: 'Emma Rodriguez',
-    time: '1 week ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1591857177580-dc82b9ac4e1e?auto=format&fit=crop&w=800&q=80',
-  ),
-  ArticleItem(
-    id: '4',
-    category: 'Outdoor Plants',
-    title: 'Planning Your First Vegetable Garden: A Step-by-Step Guide',
-    author: 'David Park',
-    time: '1 week ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=800&q=80',
-  ),
-  ArticleItem(
-    id: '5',
-    category: 'Indoor Plants',
-    title: 'Top 10 Low-Maintenance Indoor Plants for Busy People',
-    author: 'Lisa Thompson',
-    time: '2 weeks ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1463320726281-696a485928c7?auto=format&fit=crop&w=800&q=80',
-  ),
-  ArticleItem(
-    id: '6',
-    category: 'Outdoor Plants',
-    title: 'Growing Tomatoes: From Seed to Harvest',
-    author: 'James Wilson',
-    time: '2 weeks ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=800&q=80',
-  ),
-  ArticleItem(
-    id: '7',
-    category: 'Herbal Plants',
-    title: 'How to Grow Basil, Rosemary & Mint at Home',
-    author: 'Dr. Emily Chen',
-    time: '3 weeks ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=800&q=80',
-  ),
-  ArticleItem(
-    id: '8',
-    category: 'Fruit Plants',
-    title: 'Tabulampot: Growing Fruit Trees in Containers',
-    author: 'Dr. Mark Lee',
-    time: '3 weeks ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1560493676-04071c5f467b?auto=format&fit=crop&w=800&q=80',
-  ),
-  ArticleItem(
-    id: '9',
-    category: 'Indoor Plants',
-    title: 'Orchid Care 101: Keep Your Orchids Blooming Year-Round',
-    author: 'Dr. Sarah Lee',
-    time: '1 month ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=800&q=80',
-  ),
-  ArticleItem(
-    id: '10',
-    category: 'Plant Health',
-    title: 'Identifying Common Plant Diseases & How to Treat Them',
-    author: 'Dr. James Wilson',
-    time: '1 month ago',
-    imageUrl:
-        'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=800&q=80',
-  ),
-];
 
 const List<String> artikelCategories = [
   'All',
@@ -155,13 +67,14 @@ class UserArtikelScreenState extends State<UserArtikelScreen> {
   String selectedCategory = 'All';
   final TextEditingController searchCtrl = TextEditingController();
   String searchQuery = '';
-  List<ArticleItem> filtered = [];
 
   @override
   void initState() {
     super.initState();
-    filtered = List.from(allArticles);
     searchCtrl.addListener(onSearch);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ArticleProvider>(context, listen: false).fetchArticles(refresh: true);
+    });
   }
 
   @override
@@ -174,30 +87,22 @@ class UserArtikelScreenState extends State<UserArtikelScreen> {
   void onSearch() {
     setState(() {
       searchQuery = searchCtrl.text.trim().toLowerCase();
-      applyFilter();
     });
-  }
-
-  void applyFilter() {
-    filtered = allArticles.where((a) {
-      final matchCat =
-          selectedCategory == 'All' || a.category == selectedCategory;
-      final matchSearch = searchQuery.isEmpty ||
-          a.title.toLowerCase().contains(searchQuery) ||
-          a.author.toLowerCase().contains(searchQuery) ||
-          a.category.toLowerCase().contains(searchQuery);
-      return matchCat && matchSearch;
-    }).toList();
   }
 
   void selectCategory(String cat) {
     setState(() {
       selectedCategory = cat;
-      applyFilter();
     });
   }
 
-  void toggleBookmark(ArticleItem article) {
+  void toggleBookmark(ArticleItem article) async {
+    final articleProvider = Provider.of<ArticleProvider>(context, listen: false);
+    final realArticle = articleProvider.articles.firstWhere(
+      (a) => a.id.toString() == article.id,
+      orElse: () => throw Exception('Article not found'),
+    );
+    await articleProvider.toggleBookmark(realArticle);
     setState(() {
       if (globalBookmarkedIds.contains(article.id)) {
         globalBookmarkedIds.remove(article.id);
@@ -230,6 +135,28 @@ class UserArtikelScreenState extends State<UserArtikelScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final articleProvider = Provider.of<ArticleProvider>(context);
+    final rawArticles = articleProvider.articles;
+    final converted = rawArticles.map((a) => ModelConverter.articleToItem(a)).toList();
+    
+    // Sycn local bookmarks set with backend state
+    for (var a in rawArticles) {
+      if (a.isBookmarked) {
+        globalBookmarkedIds.add(a.id.toString());
+      } else {
+        globalBookmarkedIds.remove(a.id.toString());
+      }
+    }
+
+    final filtered = converted.where((a) {
+      final matchCat =
+          selectedCategory == 'All' || a.category.toLowerCase() == selectedCategory.toLowerCase();
+      final matchSearch = searchQuery.isEmpty ||
+          a.title.toLowerCase().contains(searchQuery) ||
+          a.author.toLowerCase().contains(searchQuery) ||
+          a.category.toLowerCase().contains(searchQuery);
+      return matchCat && matchSearch;
+    }).toList();
     return Scaffold(
       backgroundColor: kScaffold,
       body: Column(
@@ -243,7 +170,7 @@ class UserArtikelScreenState extends State<UserArtikelScreen> {
                   const SizedBox(height: 14),
                   buildCategoryTabs(),
                   const SizedBox(height: 14),
-                  filtered.isEmpty ? buildEmpty() : buildArticleList(),
+                  filtered.isEmpty ? buildEmpty() : buildArticleList(filtered),
                   const SizedBox(height: 24),
                 ],
               ),
@@ -413,7 +340,7 @@ class UserArtikelScreenState extends State<UserArtikelScreen> {
     );
   }
 
-  Widget buildArticleList() {
+  Widget buildArticleList(List<ArticleItem> filtered) {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),

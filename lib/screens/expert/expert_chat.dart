@@ -2,6 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+
+import '../../providers/chat_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/consultation_provider.dart';
+import '../../utils/model_converter.dart';
 import 'expert_consult.dart';
 import 'expert_riwayat_consult.dart';
 
@@ -33,70 +39,16 @@ class ExpertChatMessage {
   });
 }
 
-// ─── Auto-reply pool ──────────────────────────────────────────────────────────
-const List<String> _clientReplies = [
-  'Thank you so much! That really helps.',
-  'I see, so I should reduce watering frequency?',
-  'How often should I apply the treatment?',
-  'Great advice! I will try that right away.',
-  'Can you show me which part of the leaf to check?',
-  'Is this something I can treat at home?',
-  'What if the symptoms get worse after treatment?',
-  'Which product brand do you recommend?',
-  'I will send you another photo once I see changes.',
-  'This is really helpful, thank you so much!',
-];
-
-List<ExpertChatMessage> _buildInitialMessages(String clientName, String topic) {
-  return [
-    ExpertChatMessage(
-      text:
-          'Hi Dr. Martinez! My ${topic.toLowerCase()} is a real concern right now. Can you help me understand what\'s happening?',
-      isMe: false,
-      time: '2:14 PM',
-    ),
-    ExpertChatMessage(
-      type: ExMsgType.image,
-      mediaUrl:
-          'https://images.unsplash.com/photo-1591857177580-dc82b9ac4e1e?w=500&q=80&auto=format&fit=crop',
-      isMe: false,
-      time: '2:15 PM',
-    ),
-    ExpertChatMessage(
-      text:
-          'Hello $clientName! Thank you for the detailed photo. I can see the issue clearly. This looks like a watering problem combined with possible fungal infection.',
-      isMe: true,
-      time: '2:18 PM',
-    ),
-    ExpertChatMessage(
-      text:
-          'Based on the symptoms, I recommend:\n\n1. Reduce watering frequency\n2. Ensure proper drainage\n3. Apply fungicide treatment\n4. Remove affected leaves',
-      isMe: true,
-      time: '2:19 PM',
-    ),
-    ExpertChatMessage(
-      text:
-          'Thank you so much! How often should I water it now? And which fungicide do you recommend?',
-      isMe: false,
-      time: '2:22 PM',
-    ),
-    ExpertChatMessage(
-      text:
-          'Water only when the top 2 inches of soil are dry. For fungicide, I recommend copper-based spray. Apply every 7–10 days for 3 weeks.',
-      isMe: true,
-      time: '2:24 PM',
-    ),
-  ];
-}
-
 // ─── Screen ───────────────────────────────────────────────────────────────────
 class ExpertChatPage extends StatefulWidget {
+  final String consultationId;
   final String clientName;
   final String clientAvatar;
   final String topic;
 
   const ExpertChatPage({
     super.key,
+    required this.consultationId,
     required this.clientName,
     required this.clientAvatar,
     required this.topic,
@@ -110,21 +62,26 @@ class ExpertChatPageState extends State<ExpertChatPage> {
   final TextEditingController msgCtrl = TextEditingController();
   final ScrollController scrollCtrl = ScrollController();
   final ImagePicker picker = ImagePicker();
-  late List<ExpertChatMessage> messages;
+  
   bool hasText = false;
-  int replyIndex = 0;
+  int _prevMessageCount = 0;
 
   @override
   void initState() {
     super.initState();
-    messages = _buildInitialMessages(widget.clientName, widget.topic);
     msgCtrl.addListener(
         () => setState(() => hasText = msgCtrl.text.trim().isNotEmpty));
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ChatProvider>(context, listen: false).startPolling(int.parse(widget.consultationId));
+      _scrollToBottom();
+    });
   }
 
   @override
   void dispose() {
+    try {
+      Provider.of<ChatProvider>(context, listen: false).stopPolling();
+    } catch (_) {}
     msgCtrl.dispose();
     scrollCtrl.dispose();
     super.dispose();
@@ -152,35 +109,15 @@ class ExpertChatPageState extends State<ExpertChatPage> {
     return '$h:$m $period';
   }
 
-  void _triggerAutoReply() {
-    final reply = _clientReplies[replyIndex % _clientReplies.length];
-    replyIndex++;
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      if (!mounted) return;
-      setState(() {
-        messages.add(ExpertChatMessage(
-          text: reply,
-          isMe: false,
-          time: _currentTime(),
-        ));
-      });
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-    });
-  }
-
-  void _sendText() {
+  void _sendText() async {
     final text = msgCtrl.text.trim();
     if (text.isEmpty) return;
-    setState(() {
-      messages.add(ExpertChatMessage(
-        text: text,
-        isMe: true,
-        time: _currentTime(),
-      ));
-      msgCtrl.clear();
-    });
+    
+    msgCtrl.clear();
+    final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+    await chatProvider.sendMessage(int.parse(widget.consultationId), text: text);
+    
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-    _triggerAutoReply();
   }
 
   Future<void> _pickImage() async {
@@ -188,16 +125,14 @@ class ExpertChatPageState extends State<ExpertChatPage> {
       final XFile? file =
           await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
       if (file == null) return;
-      setState(() {
-        messages.add(ExpertChatMessage(
-          type: ExMsgType.image,
-          mediaFile: File(file.path),
-          isMe: true,
-          time: _currentTime(),
-        ));
-      });
+      
+      final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+      await chatProvider.sendMessage(
+        int.parse(widget.consultationId),
+        attachmentPath: file.path,
+      );
+      
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-      _triggerAutoReply();
     } catch (_) {}
   }
 
@@ -205,17 +140,14 @@ class ExpertChatPageState extends State<ExpertChatPage> {
     try {
       final XFile? file = await picker.pickVideo(source: ImageSource.gallery);
       if (file == null) return;
-      setState(() {
-        messages.add(ExpertChatMessage(
-          type: ExMsgType.video,
-          mediaFile: File(file.path),
-          videoDuration: '0:00',
-          isMe: true,
-          time: _currentTime(),
-        ));
-      });
+      
+      final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+      await chatProvider.sendMessage(
+        int.parse(widget.consultationId),
+        attachmentPath: file.path,
+      );
+      
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-      _triggerAutoReply();
     } catch (_) {}
   }
 
@@ -299,16 +231,18 @@ class ExpertChatPageState extends State<ExpertChatPage> {
     );
   }
 
-  void _endSession() {
-    // Move from active to completed
-    final activeIndex =
-        activeConsults.indexWhere((c) => c.clientName == widget.clientName);
-    if (activeIndex != -1) {
-      final item = activeConsults[activeIndex];
-      activeConsults.removeAt(activeIndex);
-      completedConsults.insert(0, item);
+  void _endSession() async {
+    final consultationProvider = Provider.of<ConsultationProvider>(context, listen: false);
+    final success = await consultationProvider.endConsultation(int.parse(widget.consultationId));
+    if (!success) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(consultationProvider.errorMessage ?? 'Failed to end session')),
+      );
+      return;
     }
 
+    if (!mounted) return;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -383,6 +317,53 @@ class ExpertChatPageState extends State<ExpertChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    final chatProvider = Provider.of<ChatProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
+    final currentUserId = authProvider.user?.id ?? 0;
+
+    final mappedMessages = chatProvider.messages.map((m) {
+      final isMe = m.senderId == currentUserId;
+      String timeStr = 'Recently';
+      if (m.createdAt != null) {
+        final localTime = m.createdAt!.toLocal();
+        final hour = localTime.hour > 12
+            ? localTime.hour - 12
+            : localTime.hour == 0
+                ? 12
+                : localTime.hour;
+        final minute = localTime.minute.toString().padLeft(2, '0');
+        final period = localTime.hour >= 12 ? 'PM' : 'AM';
+        timeStr = '$hour:$minute $period';
+      }
+
+      ExMsgType type = ExMsgType.text;
+      if (m.messageType == 'image') {
+        type = ExMsgType.image;
+      } else if (m.messageType == 'video') {
+        type = ExMsgType.video;
+      }
+
+      String? mediaUrl = m.attachment;
+      if (mediaUrl != null && mediaUrl.isNotEmpty && !mediaUrl.startsWith('http')) {
+        mediaUrl = '${ModelConverter.getBaseUrl()}/storage/$mediaUrl';
+      }
+
+      return ExpertChatMessage(
+        text: m.message,
+        isMe: isMe,
+        time: timeStr,
+        type: type,
+        mediaUrl: mediaUrl,
+      );
+    }).toList();
+
+    if (mappedMessages.length != _prevMessageCount) {
+      _prevMessageCount = mappedMessages.length;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToBottom();
+      });
+    }
+
     return Scaffold(
       backgroundColor: kExChatScaffold,
       body: Column(
@@ -390,13 +371,15 @@ class ExpertChatPageState extends State<ExpertChatPage> {
           _buildHeader(),
           _buildSessionBanner(),
           Expanded(
-            child: ListView.builder(
-              controller: scrollCtrl,
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              physics: const BouncingScrollPhysics(),
-              itemCount: messages.length,
-              itemBuilder: (ctx, i) => _buildMessageItem(messages[i]),
-            ),
+            child: chatProvider.isLoading && chatProvider.messages.isEmpty
+                ? const Center(child: CircularProgressIndicator(color: kExChatMain))
+                : ListView.builder(
+                    controller: scrollCtrl,
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: mappedMessages.length,
+                    itemBuilder: (ctx, i) => _buildMessageItem(mappedMessages[i]),
+                  ),
           ),
           _buildInputBar(),
           _buildEndSessionButton(),
@@ -761,8 +744,47 @@ class ExpertChatPageState extends State<ExpertChatPage> {
     );
   }
 
+  Widget _buildLockedBar() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, -3))
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.lock_outline_rounded,
+                  color: Colors.grey.shade400, size: 18),
+              const SizedBox(width: 10),
+              Text(
+                'This consultation has ended',
+                style: GoogleFonts.outfit(
+                    fontSize: 13, color: Colors.grey.shade500),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   // ── Input Bar ─────────────────────────────────────────────────────────────
   Widget _buildInputBar() {
+    final chatProvider = Provider.of<ChatProvider>(context);
+
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
       decoration: BoxDecoration(
@@ -842,17 +864,22 @@ class ExpertChatPageState extends State<ExpertChatPage> {
             const SizedBox(width: 8),
             // Send
             GestureDetector(
-              onTap: _sendText,
+              onTap: chatProvider.isSending ? null : _sendText,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: hasText ? kExChatMain : Colors.grey.shade300,
+                  color: hasText && !chatProvider.isSending ? kExChatMain : Colors.grey.shade300,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.send_rounded,
-                    color: Colors.white, size: 18),
+                child: chatProvider.isSending
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.send_rounded, color: Colors.white, size: 18),
               ),
             ),
           ],
@@ -861,7 +888,6 @@ class ExpertChatPageState extends State<ExpertChatPage> {
     );
   }
 
-  // ── End Session Button ────────────────────────────────────────────────────
   // ── End Session Button ────────────────────────────────────────────────────
   Widget _buildEndSessionButton() {
     return Container(
