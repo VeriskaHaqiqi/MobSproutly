@@ -98,6 +98,7 @@ class ModelConverter {
       author: article.author?.name ?? 'Expert Botanist',
       time: friendlyTime,
       imageUrl: imageUrl,
+      content: article.content,
       isMine: currentUserId != null && article.userId == currentUserId,
       isBookmarked: article.isBookmarked,
     );

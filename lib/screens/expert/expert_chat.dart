@@ -10,6 +10,7 @@ import '../../providers/consultation_provider.dart';
 import '../../utils/model_converter.dart';
 import 'expert_consult.dart';
 import 'expert_riwayat_consult.dart';
+import '../../utils/image_helper.dart';
 
 const Color kExChatMain = Color(0xFF5DCFCF);
 const Color kExChatTeal = Color(0xFF76EAD0);
@@ -646,7 +647,7 @@ class ExpertChatPageState extends State<ExpertChatPage> {
           bottomRight: Radius.circular(msg.isMe ? 4 : 18),
         ),
         child: msg.mediaFile != null
-            ? Image.file(msg.mediaFile!,
+            ? ImageHelper.fromPath(msg.mediaFile!.path,
                 width: double.infinity, height: 200, fit: BoxFit.cover)
             : Image.network(msg.mediaUrl ?? '',
                 width: double.infinity,

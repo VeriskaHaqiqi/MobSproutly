@@ -3,6 +3,7 @@ import 'api_client.dart';
 import '../models/user_model.dart';
 import '../models/consultation_model.dart';
 import '../models/payment_model.dart';
+import '../utils/file_helper.dart';
 
 class ConsultationService {
   final ApiClient _apiClient = ApiClient();
@@ -37,8 +38,8 @@ class ConsultationService {
         'experts': experts,
         'lastPage': lastPage,
       };
-    } on DioException catch (e) {
-      final msg = e.getErrorMessage('Failed to load experts');
+    } catch (e) {
+      final msg = e is DioException ? e.getErrorMessage('Failed to load experts') : e.toString();
       return {'success': false, 'message': msg};
     }
   }
@@ -51,8 +52,8 @@ class ConsultationService {
         'success': true,
         'expert': User.fromJson(response.data['data']),
       };
-    } on DioException catch (e) {
-      final msg = e.getErrorMessage('Failed to load expert details');
+    } catch (e) {
+      final msg = e is DioException ? e.getErrorMessage('Failed to load expert details') : e.toString();
       return {'success': false, 'message': msg};
     }
   }
@@ -76,8 +77,8 @@ class ConsultationService {
         'expertBank': expertBank,
         'message': response.data['message'],
       };
-    } on DioException catch (e) {
-      final msg = e.getErrorMessage('Failed to create consultation');
+    } catch (e) {
+      final msg = e is DioException ? e.getErrorMessage('Failed to create consultation') : e.toString();
       return {'success': false, 'message': msg};
     }
   }
@@ -89,9 +90,9 @@ class ConsultationService {
   }) async {
     try {
       final formData = FormData.fromMap({
-        'payment_proof': await MultipartFile.fromFile(
+        'payment_proof': await FileHelper.createMultipartFile(
           paymentProofPath,
-          filename: paymentProofPath.split('/').last,
+          filename: paymentProofPath.split(RegExp(r'[/\\]')).last,
         ),
       });
 
@@ -103,8 +104,8 @@ class ConsultationService {
         'payment': Payment.fromJson(response.data['data']['payment']),
         'message': response.data['message'],
       };
-    } on DioException catch (e) {
-      final msg = e.getErrorMessage('Failed to upload payment proof');
+    } catch (e) {
+      final msg = e is DioException ? e.getErrorMessage('Failed to upload payment proof') : e.toString();
       return {'success': false, 'message': msg};
     }
   }
@@ -125,8 +126,8 @@ class ConsultationService {
         'consultations': consultations,
         'lastPage': lastPage,
       };
-    } on DioException catch (e) {
-      final msg = e.getErrorMessage('Failed to load consultations');
+    } catch (e) {
+      final msg = e is DioException ? e.getErrorMessage('Failed to load consultations') : e.toString();
       return {'success': false, 'message': msg};
     }
   }
@@ -147,8 +148,8 @@ class ConsultationService {
         'consultations': consultations,
         'lastPage': lastPage,
       };
-    } on DioException catch (e) {
-      final msg = e.getErrorMessage('Failed to load expert consultations');
+    } catch (e) {
+      final msg = e is DioException ? e.getErrorMessage('Failed to load expert consultations') : e.toString();
       return {'success': false, 'message': msg};
     }
   }
@@ -161,8 +162,8 @@ class ConsultationService {
         'success': true,
         'consultation': Consultation.fromJson(response.data['data']),
       };
-    } on DioException catch (e) {
-      final msg = e.getErrorMessage('Failed to load consultation details');
+    } catch (e) {
+      final msg = e is DioException ? e.getErrorMessage('Failed to load consultation details') : e.toString();
       return {'success': false, 'message': msg};
     }
   }
@@ -184,8 +185,8 @@ class ConsultationService {
         'consultation': Consultation.fromJson(response.data['data']),
         'message': response.data['message'],
       };
-    } on DioException catch (e) {
-      final msg = e.getErrorMessage('Failed to verify payment');
+    } catch (e) {
+      final msg = e is DioException ? e.getErrorMessage('Failed to verify payment') : e.toString();
       return {'success': false, 'message': msg};
     }
   }
@@ -199,8 +200,8 @@ class ConsultationService {
         'consultation': Consultation.fromJson(response.data['data']),
         'message': response.data['message'],
       };
-    } on DioException catch (e) {
-      final msg = e.getErrorMessage('Failed to end consultation');
+    } catch (e) {
+      final msg = e is DioException ? e.getErrorMessage('Failed to end consultation') : e.toString();
       return {'success': false, 'message': msg};
     }
   }
@@ -218,8 +219,8 @@ class ConsultationService {
         'consultations': consultations,
         'lastPage': lastPage,
       };
-    } on DioException catch (e) {
-      final msg = e.getErrorMessage('Failed to load payment history');
+    } catch (e) {
+      final msg = e is DioException ? e.getErrorMessage('Failed to load payment history') : e.toString();
       return {'success': false, 'message': msg};
     }
   }

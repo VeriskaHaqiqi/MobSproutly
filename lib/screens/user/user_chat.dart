@@ -10,6 +10,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/rating_provider.dart';
 import '../../utils/model_converter.dart';
 import 'user_consult.dart';
+import '../../utils/image_helper.dart';
 
 const Color kChatTeal = Color(0xFF76EAD0);
 const Color kChatBlue = Color(0xFF76D7EA);
@@ -1094,7 +1095,7 @@ class UserChatScreenState extends State<UserChatScreen> {
               top: Radius.circular(18),
             ),
             child: msg.mediaFile != null
-                ? Image.file(
+                ? ImageHelper.fromFile(
                     msg.mediaFile!,
                     width: double.infinity,
                     height: 200,

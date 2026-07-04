@@ -9,6 +9,8 @@ import 'user_chat_locked.dart';
 import 'package:provider/provider.dart';
 import '../../providers/consultation_provider.dart';
 import '../../providers/rating_provider.dart';
+import '../../providers/chat_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../utils/model_converter.dart';
 import '../../models/user_model.dart';
 
@@ -491,7 +493,7 @@ class UserRiwayatConsultScreenState extends State<UserRiwayatConsultScreen> {
                         fontSize: 12, color: Colors.grey.shade500)),
                 const Spacer(),
                 Text(
-                  '\$${item.price.toStringAsFixed(2)}',
+                  'Rp ${item.price.toStringAsFixed(0)}',
                   style: GoogleFonts.outfit(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -627,7 +629,49 @@ class UserRiwayatConsultScreenState extends State<UserRiwayatConsultScreen> {
   }
 
   // ── Read-Only Chat (View Details) ─────────────────────────────────────────
-  void showReadOnlyChat(CompletedConsultItem item) {
+  void showReadOnlyChat(CompletedConsultItem item) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (c) => const Center(child: CircularProgressIndicator(color: kRiwayatMain)),
+    );
+
+    final chatProv = Provider.of<ChatProvider>(context, listen: false);
+    await chatProv.fetchMessages(int.parse(item.id));
+
+    if (mounted) {
+      Navigator.pop(context);
+    }
+
+    final fetchedMessages = chatProv.messages;
+    final currentUserId = Provider.of<AuthProvider>(context, listen: false).user?.id;
+
+    final List<HistoryMessage> historyMessages = fetchedMessages.map((m) {
+      final isMe = m.senderId == currentUserId;
+      final timeStr = m.createdAt != null
+          ? '${m.createdAt!.hour.toString().padLeft(2, '0')}:${m.createdAt!.minute.toString().padLeft(2, '0')}'
+          : '';
+      return HistoryMessage(
+        text: m.message ?? '',
+        isMe: isMe,
+        time: timeStr,
+      );
+    }).toList();
+
+    final itemWithMessages = CompletedConsultItem(
+      id: item.id,
+      expertName: item.expertName,
+      specialty: item.specialty,
+      avatarUrl: item.avatarUrl,
+      rating: item.rating,
+      topic: item.topic,
+      date: item.date,
+      price: item.price,
+      messages: historyMessages,
+    );
+
+    if (!mounted) return;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -680,7 +724,7 @@ class UserRiwayatConsultScreenState extends State<UserRiwayatConsultScreen> {
                     ),
                     const SizedBox(width: 12),
                     ClipOval(
-                      child: Image.network(item.avatarUrl,
+                      child: Image.network(itemWithMessages.avatarUrl,
                           width: 36,
                           height: 36,
                           fit: BoxFit.cover,
@@ -689,7 +733,7 @@ class UserRiwayatConsultScreenState extends State<UserRiwayatConsultScreen> {
                               height: 36,
                               color: kRiwayatTeal.withOpacity(0.3),
                               child: Center(
-                                  child: Text(item.expertName[0],
+                                  child: Text(itemWithMessages.expertName[0],
                                       style: GoogleFonts.outfit(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w700,
@@ -700,12 +744,12 @@ class UserRiwayatConsultScreenState extends State<UserRiwayatConsultScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(item.expertName,
+                          Text(itemWithMessages.expertName,
                               style: GoogleFonts.outfit(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                   color: Colors.white)),
-                          Text(item.specialty,
+                          Text(itemWithMessages.specialty,
                               style: GoogleFonts.outfit(
                                   fontSize: 11,
                                   color: Colors.white.withOpacity(0.8))),
@@ -743,9 +787,9 @@ class UserRiwayatConsultScreenState extends State<UserRiwayatConsultScreen> {
                 child: ListView.builder(
                   controller: scrollCtrl,
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                  itemCount: item.messages.length,
+                  itemCount: itemWithMessages.messages.length,
                   itemBuilder: (ctx, i) =>
-                      buildReadOnlyBubble(item, item.messages[i]),
+                      buildReadOnlyBubble(itemWithMessages, itemWithMessages.messages[i]),
                 ),
               ),
 

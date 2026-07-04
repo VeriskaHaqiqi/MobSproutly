@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'api_client.dart';
 import '../models/message_model.dart';
 import '../models/consultation_model.dart';
+import '../utils/file_helper.dart';
 
 class ChatService {
   final ApiClient _apiClient = ApiClient();
@@ -45,15 +46,18 @@ class ChatService {
         mapData['message'] = messageText;
       }
 
+      final formData = FormData.fromMap(mapData);
+
       if (attachmentPath != null && attachmentPath.isNotEmpty) {
-        mapData['attachment'] = await MultipartFile.fromFile(
-          attachmentPath,
-          filename: attachmentPath.split('/').last,
-        );
-        // Backend detects type via mime-type.
+        formData.files.add(MapEntry(
+          'attachment',
+          await FileHelper.createMultipartFile(
+            attachmentPath,
+            filename: attachmentPath.split(RegExp(r'[/\\]')).last,
+          ),
+        ));
       }
 
-      final formData = FormData.fromMap(mapData);
       final response = await _dio.post('/chat/$consultationId', data: formData);
 
       return {

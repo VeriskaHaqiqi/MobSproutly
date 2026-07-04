@@ -211,6 +211,29 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> saveSpecializations(List<String> specializations) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await _userService.saveSpecializations(specializations);
+
+    if (result['success']) {
+      final profileResult = await _userService.getProfile();
+      if (profileResult['success']) {
+        _user = profileResult['user'];
+      }
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } else {
+      _errorMessage = result['message'];
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> uploadCertificate({
     required String filePath,
     required bool isDiploma,

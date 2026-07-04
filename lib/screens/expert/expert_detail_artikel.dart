@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../providers/article_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/model_converter.dart';
+import '../../utils/image_helper.dart';
 const Color kExDetMain = Color(0xFF5DCFCF);
 const Color kExDetTeal = Color(0xFF76EAD0);
 const Color kExDetBlue = Color(0xFF76D7EA);
@@ -13,6 +14,9 @@ const Color kExDetLGreen = Color(0xFFD0FF99);
 const Color kExDetGreen = Color(0xFF99FF99);
 
 String getExpertArticleContent(ExpertArticleItem article) {
+  if (article.content.isNotEmpty) {
+    return article.content;
+  }
   return '''Starting an ${article.category.toLowerCase()} garden is one of the most rewarding ways to connect with nature from the comfort of your home. Whether you're a complete beginner or looking to expand your skills, this comprehensive guide will walk you through everything you need to know.
 
 Why Choose ${article.category}?
@@ -243,7 +247,7 @@ class ExpertDetailArtikelPageState extends State<ExpertDetailArtikelPage> {
   Widget buildCoverImage() {
     final url = widget.article.imageUrl;
     if (url.startsWith('/')) {
-      return Image.file(dartio.File(url),
+      return ImageHelper.fromPath(url,
           fit: BoxFit.cover, errorBuilder: (ctx, e, s) => _coverFallback());
     }
     return Image.network(url,
@@ -568,7 +572,7 @@ class ExpertDetailArtikelPageState extends State<ExpertDetailArtikelPage> {
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(16)),
                   child: imgUrl.startsWith('/')
-                      ? Image.file(dartio.File(imgUrl),
+                      ? ImageHelper.fromPath(imgUrl,
                           height: 112,
                           width: double.infinity,
                           fit: BoxFit.cover,

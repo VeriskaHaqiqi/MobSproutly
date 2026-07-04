@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'api_client.dart';
 import '../models/article_model.dart';
+import '../utils/file_helper.dart';
 
 class ArticleService {
   final ApiClient _apiClient = ApiClient();
@@ -88,9 +89,9 @@ class ArticleService {
       };
 
       if (coverImagePath != null && coverImagePath.isNotEmpty) {
-        mapData['cover_image'] = await MultipartFile.fromFile(
+        mapData['cover_image'] = await FileHelper.createMultipartFile(
           coverImagePath,
-          filename: coverImagePath.split('/').last,
+          filename: coverImagePath.split(RegExp(r'[/\\]')).last,
         );
       }
 
@@ -127,9 +128,9 @@ class ArticleService {
       };
 
       if (coverImagePath != null && coverImagePath.isNotEmpty) {
-        mapData['cover_image'] = await MultipartFile.fromFile(
+        mapData['cover_image'] = await FileHelper.createMultipartFile(
           coverImagePath,
-          filename: coverImagePath.split('/').last,
+          filename: coverImagePath.split(RegExp(r'[/\\]')).last,
         );
       }
 

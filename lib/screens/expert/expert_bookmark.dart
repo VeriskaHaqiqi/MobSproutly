@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import '../../providers/article_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/model_converter.dart';
+import '../../utils/image_helper.dart';
 const Color kExBmMain = Color(0xFF5DCFCF);
 const Color kExBmTeal = Color(0xFF76EAD0);
 const Color kExBmBlue = Color(0xFF76D7EA);
@@ -341,8 +342,7 @@ class ExpertBookmarkPageState extends State<ExpertBookmarkPage> {
               borderRadius:
                   const BorderRadius.horizontal(left: Radius.circular(16)),
               child: article.imageUrl.startsWith('/')
-                  ? Image.file(
-                      _file(article.imageUrl),
+                  ? ImageHelper.fromPath(article.imageUrl,
                       width: 100,
                       height: 110,
                       fit: BoxFit.cover,

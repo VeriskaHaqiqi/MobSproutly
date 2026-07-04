@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'api_client.dart';
 import '../models/user_model.dart';
+import '../utils/file_helper.dart';
 
 class UserService {
   final ApiClient _apiClient = ApiClient();
@@ -56,7 +57,7 @@ class UserService {
       final filename = photoPath.split(RegExp(r'[/\\]')).last;
 
       final formData = FormData.fromMap({
-        'profile_photo': await MultipartFile.fromFile(
+        'profile_photo': await FileHelper.createMultipartFile(
           photoPath,
           filename: filename,
         ),
@@ -182,9 +183,9 @@ class UserService {
     try {
       final keyName = isDiploma ? 'diploma' : 'certificate';
       final formData = FormData.fromMap({
-        keyName: await MultipartFile.fromFile(
+        keyName: await FileHelper.createMultipartFile(
           filePath,
-          filename: filePath.split('/').last,
+          filename: filePath.split(RegExp(r'[/\\]')).last,
         ),
       });
 
@@ -228,6 +229,23 @@ class UserService {
       };
     } on DioException catch (e) {
       final msg = e.getErrorMessage('Failed to save schedules');
+      return {'success': false, 'message': msg};
+    }
+  }
+
+  // Save expert specializations
+  Future<Map<String, dynamic>> saveSpecializations(List<String> specializations) async {
+    try {
+      final response = await _dio.post('/experts/profile/specializations', data: {
+        'specializations': specializations,
+      });
+      return {
+        'success': true,
+        'message': response.data['message'],
+        'data': response.data['data'],
+      };
+    } on DioException catch (e) {
+      final msg = e.getErrorMessage('Failed to save specializations');
       return {'success': false, 'message': msg};
     }
   }

@@ -7,6 +7,8 @@ import 'expert_artikel.dart';
 import 'expert_setting.dart';
 import 'package:provider/provider.dart';
 import '../../providers/consultation_provider.dart';
+import '../../providers/chat_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../utils/model_converter.dart';
 
 const Color kExRiwMain = Color(0xFF5DCFCF);
@@ -70,40 +72,6 @@ class ExpertRiwayatConsultPageState extends State<ExpertRiwayatConsultPage> {
     }).toList();
   }
 
-  List<HistoryChatMsg> getHistoryMessages(ExpertConsultItem item) {
-    return [
-      HistoryChatMsg(
-        text:
-            'Hi Doctor! I need help with ${item.topic.toLowerCase()}. Can you help me understand what is happening?',
-        isMe: false,
-        time: '2:14 PM',
-      ),
-      HistoryChatMsg(
-        text:
-            'Hello ${item.clientName}! Thank you for explaining the issue. Based on your description, I can help you diagnose the plant condition.',
-        isMe: true,
-        time: '2:18 PM',
-      ),
-      HistoryChatMsg(
-        text:
-            'Based on the symptoms, I recommend checking the watering routine, drainage condition, and visible signs of pests or fungal infection.',
-        isMe: true,
-        time: '2:20 PM',
-      ),
-      HistoryChatMsg(
-        text: item.lastMessage,
-        isMe: false,
-        time: '2:24 PM',
-      ),
-      const HistoryChatMsg(
-        text:
-            'This session has been completed. Please continue monitoring the plant condition and repeat the treatment if symptoms return.',
-        isMe: true,
-        time: '2:30 PM',
-      ),
-    ];
-  }
-
   void onNavTapped(int index) {
     if (index == navIndex) return;
 
@@ -137,8 +105,36 @@ class ExpertRiwayatConsultPageState extends State<ExpertRiwayatConsultPage> {
     }
   }
 
-  void showReadOnlyChat(ExpertConsultItem item) {
-    final messages = getHistoryMessages(item);
+  void showReadOnlyChat(ExpertConsultItem item) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (c) => const Center(child: CircularProgressIndicator(color: kExRiwMain)),
+    );
+
+    final chatProv = Provider.of<ChatProvider>(context, listen: false);
+    await chatProv.fetchMessages(int.parse(item.id));
+
+    if (mounted) {
+      Navigator.pop(context);
+    }
+
+    final fetchedMessages = chatProv.messages;
+    final currentUserId = Provider.of<AuthProvider>(context, listen: false).user?.id;
+
+    final List<HistoryChatMsg> messages = fetchedMessages.map((m) {
+      final isMe = m.senderId == currentUserId;
+      final timeStr = m.createdAt != null
+          ? '${m.createdAt!.hour.toString().padLeft(2, '0')}:${m.createdAt!.minute.toString().padLeft(2, '0')}'
+          : '';
+      return HistoryChatMsg(
+        text: m.message ?? '',
+        isMe: isMe,
+        time: timeStr,
+      );
+    }).toList();
+
+    if (!mounted) return;
 
     showModalBottomSheet(
       context: context,

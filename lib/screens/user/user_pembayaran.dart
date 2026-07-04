@@ -110,7 +110,18 @@ class UserPembayaranScreenState extends State<UserPembayaranScreen> {
     final consultationProvider = Provider.of<ConsultationProvider>(context, listen: false);
     final currentCon = consultationProvider.currentConsultation;
 
-    if (currentCon == null) return;
+    if (currentCon == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(consultationProvider.errorMessage ?? 'Failed to start consultation. Please try again.',
+              style: GoogleFonts.outfit(fontSize: 13)),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      return;
+    }
 
     if (uploadedFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -797,6 +808,10 @@ class UserPembayaranScreenState extends State<UserPembayaranScreen> {
 
   // ── Expert Summary ────────────────────────────────────────────────────────
   Widget buildExpertSummary() {
+    final consultationProvider = Provider.of<ConsultationProvider>(context);
+    final currentCon = consultationProvider.currentConsultation;
+    final duration = currentCon?.duration ?? 30;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -854,7 +869,7 @@ class UserPembayaranScreenState extends State<UserPembayaranScreen> {
                         color: kPayTeal.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Text('Video Call',
+                      child: Text('Live Chat',
                           style: GoogleFonts.outfit(
                               fontSize: 11,
                               color: kPayMain,
@@ -866,7 +881,7 @@ class UserPembayaranScreenState extends State<UserPembayaranScreen> {
                           style: GoogleFonts.outfit(
                               fontSize: 11, color: Colors.grey.shade400)),
                     ),
-                    Text('30 minutes',
+                    Text('$duration minutes',
                         style: GoogleFonts.outfit(
                             fontSize: 11, color: Colors.grey.shade500)),
                   ],

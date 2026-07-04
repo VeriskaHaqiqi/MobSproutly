@@ -11,6 +11,7 @@ import 'expert_home.dart' hide ExpertAccountPage;
 import 'expert_consult.dart';
 import 'expert_setting.dart';
 import 'expert_tulis_artikel.dart';
+import '../../utils/image_helper.dart';
 
 const Color kMyArtMain = Color(0xFF5DCFCF);
 const Color kMyArtTeal = Color(0xFF76EAD0);
@@ -506,7 +507,7 @@ class ExpertMyArticlePageState extends State<ExpertMyArticlePage> {
               borderRadius:
                   const BorderRadius.horizontal(left: Radius.circular(16)),
               child: imgUrl.startsWith('/')
-                  ? Image.file(dartio.File(imgUrl),
+                  ? ImageHelper.fromPath(imgUrl,
                       width: 100,
                       height: 110,
                       fit: BoxFit.cover,

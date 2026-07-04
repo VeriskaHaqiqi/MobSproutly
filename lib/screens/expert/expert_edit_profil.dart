@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../utils/image_helper.dart';
 
 const Color kExEditMain = Color(0xFF5DCFCF);
 const Color kExEditTeal = Color(0xFF76EAD0);
@@ -269,6 +270,7 @@ class _ExpertEditProfilPageState extends State<ExpertEditProfilPage> {
       yearsOfExperience: int.tryParse(_yearsOfExpCtrl.text.trim()) ?? 0,
       description: _descriptionCtrl.text.trim().isNotEmpty ? _descriptionCtrl.text.trim() : _category,
     );
+    await auth.saveSpecializations(_selectedSpecializations);
 
     if (success) {
       // Handle photo changes
@@ -537,8 +539,7 @@ class _ExpertEditProfilPageState extends State<ExpertEditProfilPage> {
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => _emptyAccountAvatar(),
                         )
-                      : Image.file(
-                          File(_photoPath!),
+                      : ImageHelper.fromPath(_photoPath!,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => _emptyAccountAvatar(),
                         ))

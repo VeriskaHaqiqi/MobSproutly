@@ -15,14 +15,6 @@ const Color kPencarianMain = Color(0xFF5DCFCF);
 const Color kPencarianScaffold = Color(0xFFF0F4F3);
 const Color kPencarianLGreen = Color(0xFFD0FF99);
 
-// ─── 4 Categories (strict) ───────────────────────────────────────────────────
-const List<String> expertCategories = [
-  'All',
-  'Ornamental Plants',
-  'Vegetables & Food Crops',
-  'Fruit Plants',
-  'Herbs & Spices',
-];
 
 // ─── Expert Model ─────────────────────────────────────────────────────────────
 class ExpertItem {
@@ -123,7 +115,7 @@ class UserPencarianScreenState extends State<UserPencarianScreen> {
 
     list = list.where((e) {
       final matchCat =
-          selectedCategory == 'All' || e.category == selectedCategory;
+          selectedCategory == 'All' || e.specialties.contains(selectedCategory) || e.category == selectedCategory;
       final matchSearch = searchQuery.isEmpty ||
           e.name.toLowerCase().contains(searchQuery) ||
           e.degree.toLowerCase().contains(searchQuery) ||
@@ -492,7 +484,22 @@ class UserPencarianScreenState extends State<UserPencarianScreen> {
     );
   }
 
+  List<String> get dynamicCategories {
+    final expertProvider = Provider.of<ExpertProvider>(context);
+    final rawExperts = expertProvider.experts;
+    List<ExpertItem> list = rawExperts.map((e) => ModelConverter.userToExpertItem(e)).toList();
+    
+    Set<String> categories = {'All'};
+    for (var expert in list) {
+      for (var spec in expert.specialties) {
+        categories.add(spec);
+      }
+    }
+    return categories.toList();
+  }
+
   Widget buildCategoryBar() {
+    final cats = dynamicCategories;
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
@@ -549,9 +556,9 @@ class UserPencarianScreenState extends State<UserPencarianScreen> {
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.only(left: 16, right: 8),
-              itemCount: expertCategories.length,
+              itemCount: cats.length,
               itemBuilder: (ctx, i) {
-                final cat = expertCategories[i];
+                final cat = cats[i];
                 final sel = cat == selectedCategory;
                 return GestureDetector(
                   onTap: () => setState(() => selectedCategory = cat),

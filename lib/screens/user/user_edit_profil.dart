@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../auth/login_screen.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../utils/image_helper.dart';
 
 const Color kEditTeal = Color(0xFF76EAD0);
 const Color kEditBlue = Color(0xFF76D7EA);
@@ -481,7 +482,7 @@ class UserEditProfilScreenState extends State<UserEditProfilScreen> {
                                 color: kEditTeal.withOpacity(0.2),
                                 child: const Icon(Icons.person, color: kEditMain, size: 40),
                               ))
-                          : Image.file(File(photoPath!),
+                          : ImageHelper.fromPath(photoPath!,
                               fit: BoxFit.cover, width: 100, height: 100))
                       : Image.network(
                           user?.photoUrl ?? 'https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=200&q=80',

@@ -8,6 +8,7 @@ class Consultation {
   final int expertId;
   final String? topic;
   final double fee;
+  final int? duration; 
   final String
       status; // 'waiting_payment', 'waiting_verification', 'active', 'completed', 'rejected'
   final DateTime? startedAt;
@@ -25,6 +26,7 @@ class Consultation {
     required this.expertId,
     this.topic,
     required this.fee,
+    this.duration,
     required this.status,
     this.startedAt,
     this.scheduledEndAt,
@@ -47,6 +49,7 @@ class Consultation {
           : json['expert_id'],
       topic: json['topic'],
       fee: json['fee'] != null ? double.parse(json['fee'].toString()) : 0.0,
+      duration: json['duration'] as int?,
       status: json['status'] ?? 'waiting_payment',
       startedAt: json['started_at'] != null
           ? DateTime.parse(json['started_at'])

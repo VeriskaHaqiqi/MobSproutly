@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../providers/article_provider.dart';
 import '../../models/article_model.dart';
 import 'expert_artikel.dart';
+import '../../utils/image_helper.dart';
 
 const Color kTulisMain = Color(0xFF5DCFCF);
 const Color kTulisTeal = Color(0xFF76EAD0);
@@ -51,7 +52,7 @@ class EditorSection {
   FocusNode? focus;
   List<TextSegment> segments;
   // image section
-  File? imageFile;
+  String? imagePath;
 
   EditorSection.text()
       : type = SectionType.text,
@@ -59,9 +60,9 @@ class EditorSection {
         ctrl = TextEditingController(),
         focus = FocusNode();
 
-  EditorSection.image(File file)
+    EditorSection.image(String path)
       : type = SectionType.image,
-        imageFile = file,
+        imagePath = path,
         segments = [];
 
   void dispose() {
@@ -81,7 +82,7 @@ class ExpertTulisArtikelPage extends StatefulWidget {
 }
 
 class ExpertTulisArtikelPageState extends State<ExpertTulisArtikelPage> {
-  File? coverImage;
+  XFile? coverImage;
   final ImagePicker picker = ImagePicker();
   final TextEditingController titleCtrl = TextEditingController();
   String? titleErr;
@@ -393,7 +394,7 @@ class ExpertTulisArtikelPageState extends State<ExpertTulisArtikelPage> {
           await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
       if (file == null) return;
       setState(() {
-        final imgSec = EditorSection.image(File(file.path));
+        final imgSec = EditorSection.image(file.path);
         final textSec = EditorSection.text();
         final insertAt = focusedSectionIndex + 1;
         sections.insert(insertAt, imgSec);
@@ -424,7 +425,7 @@ class ExpertTulisArtikelPageState extends State<ExpertTulisArtikelPage> {
     try {
       final XFile? file =
           await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
-      if (file != null) setState(() => coverImage = File(file.path));
+      if (file != null) setState(() => coverImage = file);
     } catch (_) {}
   }
 
@@ -659,7 +660,7 @@ class ExpertTulisArtikelPageState extends State<ExpertTulisArtikelPage> {
         child: coverImage != null
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(15),
-                child: Image.file(coverImage!,
+                child: ImageHelper.fromPath(coverImage!.path,
                     fit: BoxFit.cover, width: double.infinity))
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -1017,8 +1018,7 @@ class ExpertTulisArtikelPageState extends State<ExpertTulisArtikelPage> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: Image.file(
-              sec.imageFile!,
+            child: ImageHelper.fromPath(sec.imagePath!,
               width: double.infinity,
               fit: BoxFit.cover,
             ),

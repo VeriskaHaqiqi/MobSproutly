@@ -28,6 +28,7 @@ class ExpertArticleItem {
   final String author;
   final String time;
   final String imageUrl;
+  final String content;
   final bool isMine;
   bool isBookmarked;
 
@@ -38,6 +39,7 @@ class ExpertArticleItem {
     required this.author,
     required this.time,
     required this.imageUrl,
+    required this.content,
     this.isMine = false,
     this.isBookmarked = false,
   });
