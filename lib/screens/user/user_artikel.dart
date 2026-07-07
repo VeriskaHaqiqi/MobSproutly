@@ -41,14 +41,14 @@ class ArticleItem {
 }
 
 // ─── 4 Kategori resmi Sproutly ────────────────────────────────────────────────
-// Ornamental Plants | Vegetables & Food Crops | Fruit Plants | Herbs & Spices
 
 const List<String> artikelCategories = [
   'All',
-  'Ornamental Plants',
-  'Vegetables & Food Crops',
-  'Fruit Plants',
+  'Indoor Plants',
+  'Outdoor Plants',
+  'Hydroponics',
   'Herbs & Spices',
+  'Ornamental Plants',
 ];
 
 // ─── Bookmark state (global) ──────────────────────────────────────────────────

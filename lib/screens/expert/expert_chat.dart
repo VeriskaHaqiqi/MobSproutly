@@ -513,7 +513,7 @@ class ExpertChatPageState extends State<ExpertChatPage> {
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: Colors.black87)),
-                Text('45-minute consultation',
+                Text('30-minute consultation',
                     style: GoogleFonts.outfit(
                         fontSize: 11, color: Colors.black54)),
               ],

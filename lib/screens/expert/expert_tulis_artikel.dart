@@ -8,7 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../providers/article_provider.dart';
 import '../../models/article_model.dart';
-import 'expert_artikel.dart';
+//import 'expert_artikel.dart';
 import '../../utils/image_helper.dart';
 
 const Color kTulisMain = Color(0xFF5DCFCF);
@@ -86,7 +86,8 @@ class ExpertTulisArtikelPageState extends State<ExpertTulisArtikelPage> {
   final ImagePicker picker = ImagePicker();
   final TextEditingController titleCtrl = TextEditingController();
   String? titleErr;
-  String selectedCategory = 'Ornamental Plants';
+  int? selectedCategoryId;
+  //String selectedCategory = 'Ornamental Plants';
   bool isUploading = false;
 
   // Multi-section editor
@@ -458,13 +459,17 @@ class ExpertTulisArtikelPageState extends State<ExpertTulisArtikelPage> {
 
     setState(() => isUploading = true);
     final articleProvider = Provider.of<ArticleProvider>(context, listen: false);
-    final category = articleProvider.categories.firstWhere(
-      (c) => c.name.toLowerCase() == selectedCategory.toLowerCase(),
-      orElse: () => ArticleCategory(id: 1, name: 'Ornamental Plants'),
-    );
+    if (selectedCategoryId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Please select a category', style: GoogleFonts.outfit(fontSize: 13)),
+        backgroundColor: Colors.redAccent,
+      ));
+      setState(() => isUploading = false);
+      return;
+    }
 
     final success = await articleProvider.createArticle(
-      categoryId: category.id,
+      categoryId: selectedCategoryId!,
       title: titleCtrl.text.trim(),
       content: content,
       coverImagePath: coverImage?.path,
@@ -682,50 +687,53 @@ class ExpertTulisArtikelPageState extends State<ExpertTulisArtikelPage> {
   }
 
   Widget buildCategoryPicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Category',
-            style: GoogleFonts.outfit(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87)),
-        const SizedBox(height: 6),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200, width: 1.5),
-          ),
-          child: DropdownButtonFormField<String>(
-            value: selectedCategory,
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              isDense: true,
+    return Consumer<ArticleProvider>(
+      builder: (context, articleProvider, _) {
+        final categories = articleProvider.categories; // List<ArticleCategory> dari API
+
+        // Set default kalau selectedCategoryId belum ke-set & data udah kepanggil
+        if (categories.isNotEmpty && selectedCategoryId == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            setState(() => selectedCategoryId = categories.first.id);
+          });
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Category', style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87)),
+            const SizedBox(height: 6),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200, width: 1.5),
+              ),
+              child: DropdownButtonFormField<int>(
+                value: selectedCategoryId,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  isDense: true,
+                ),
+                style: GoogleFonts.outfit(fontSize: 14, color: Colors.black87),
+                icon: Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey.shade500),
+                dropdownColor: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                items: categories
+                    .map((c) => DropdownMenuItem(
+                          value: c.id,
+                          child: Text(c.name, style: GoogleFonts.outfit(fontSize: 14, color: Colors.black87)),
+                        ))
+                    .toList(),
+                onChanged: (val) {
+                  if (val != null) setState(() => selectedCategoryId = val);
+                },
+              ),
             ),
-            style: GoogleFonts.outfit(fontSize: 14, color: Colors.black87),
-            icon: Icon(Icons.keyboard_arrow_down_rounded,
-                color: Colors.grey.shade500),
-            dropdownColor: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            items: expertArtikelCategories
-                .where((c) => c != 'All')
-                .map((c) => DropdownMenuItem(
-                      value: c,
-                      child: Text(c,
-                          style: GoogleFonts.outfit(
-                              fontSize: 14, color: Colors.black87)),
-                    ))
-                .toList(),
-            onChanged: (val) {
-              if (val != null) setState(() => selectedCategory = val);
-            },
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 
