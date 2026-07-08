@@ -11,6 +11,9 @@ import '../../providers/rating_provider.dart';
 import '../../utils/model_converter.dart';
 import 'user_consult.dart';
 import '../../utils/image_helper.dart';
+import 'user_informasi_ahli.dart';
+import 'user_pencarian.dart';
+import '../../services/expert_service.dart';
 
 const Color kChatTeal = Color(0xFF76EAD0);
 const Color kChatBlue = Color(0xFF76D7EA);
@@ -163,355 +166,51 @@ class UserChatScreenState extends State<UserChatScreen> {
     } catch (_) {}
   }
 
-  void showExpertProfile(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.65,
-          maxChildSize: 0.9,
-          minChildSize: 0.45,
-          builder: (ctx, scrollController) {
-            return Container(
-              decoration: const BoxDecoration(
-                color: Color(0xFFF0F4F3),
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(24),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(top: 12),
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => Navigator.pop(ctx),
-                          child: Container(
-                            width: 34,
-                            height: 34,
-                            decoration: BoxDecoration(
-                              color: kChatTeal.withOpacity(0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.close,
-                              color: kChatMain,
-                              size: 18,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Expert Information',
-                          style: GoogleFonts.outfit(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Divider(color: Colors.grey.shade200, height: 1),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      controller: scrollController,
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildExpertProfileCard(),
-                          const SizedBox(height: 14),
-                          Row(
-                            children: [
-                              _buildSimpleExpertStat(
-                                '120+',
-                                'Consultations',
-                                Icons.chat_bubble_outline_rounded,
-                                const Color(0xFFD0FF99),
-                              ),
-                              const SizedBox(width: 10),
-                              _buildSimpleExpertStat(
-                                '4.9',
-                                'Rating',
-                                Icons.star_outline_rounded,
-                                const Color(0xFF99FF99),
-                              ),
-                              const SizedBox(width: 10),
-                              _buildSimpleExpertStat(
-                                'Fast',
-                                'Response',
-                                Icons.access_time_rounded,
-                                kChatTeal,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
+  bool _loadingExpertProfile = false;
 
-  Widget _buildExpertProfileCard() {
-    final consult = widget.consult;
+  Future<void> goToExpertProfile(BuildContext context) async {
+    if (_loadingExpertProfile) return;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    // If the active consultation already finished loading (with its
+    // expert relation included), reuse that data immediately — no
+    // need to hit the network again.
+    final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+    final cachedExpert = chatProvider.consultation?.expert;
+    if (cachedExpert != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => UserInformasiAhliScreen(
+            expert: ModelConverter.userToExpertItem(cachedExpert),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Stack(
-                children: [
-                  ClipOval(
-                    child: Image.network(
-                      consult.avatarUrl,
-                      width: 70,
-                      height: 70,
-                      fit: BoxFit.cover,
-                      errorBuilder: (ctx, e, s) {
-                        return Container(
-                          width: 70,
-                          height: 70,
-                          color: kChatTeal.withOpacity(0.2),
-                          child: Center(
-                            child: Text(
-                              consult.expertName[0],
-                              style: GoogleFonts.outfit(
-                                fontSize: 26,
-                                fontWeight: FontWeight.w700,
-                                color: kChatMain,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  if (consult.isOnline)
-                    Positioned(
-                      bottom: 2,
-                      right: 2,
-                      child: Container(
-                        width: 18,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4CAF50),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      consult.expertName,
-                      style: GoogleFonts.outfit(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      consult.specialty,
-                      style: GoogleFonts.outfit(
-                        fontSize: 13,
-                        color: kChatMain,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.star_rounded,
-                          color: Color(0xFFFFBB00),
-                          size: 15,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '4.9',
-                          style: GoogleFonts.outfit(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '8 years exp',
-                          style: GoogleFonts.outfit(
-                            fontSize: 12,
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      consult.isOnline ? 'Available now' : 'Currently offline',
-                      style: GoogleFonts.outfit(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: consult.isOnline
-                            ? const Color(0xFF2E7D32)
-                            : Colors.orange.shade700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Divider(color: Colors.grey.shade100),
-          const SizedBox(height: 12),
-          Text(
-            'About',
-            style: GoogleFonts.outfit(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            '${consult.expertName} helps users diagnose plant problems, understand plant care routines, and provide practical recommendations based on the consultation details.',
-            style: GoogleFonts.outfit(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-              height: 1.6,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Divider(color: Colors.grey.shade100),
-          const SizedBox(height: 12),
-          Text(
-            'Specialization',
-            style: GoogleFonts.outfit(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 6,
-            ),
-            decoration: BoxDecoration(
-              color: kChatTeal.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: kChatTeal.withOpacity(0.4),
-              ),
-            ),
-            child: Text(
-              consult.specialty,
-              style: GoogleFonts.outfit(
-                fontSize: 12,
-                color: kChatMain,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSimpleExpertStat(
-    String value,
-    String label,
-    IconData icon,
-    Color color,
-  ) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.25),
-          borderRadius: BorderRadius.circular(14),
         ),
-        child: Column(
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.4),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                size: 16,
-                color: kChatMain,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              style: GoogleFonts.outfit(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: Colors.black87,
-              ),
-            ),
-            Text(
-              label,
-              style: GoogleFonts.outfit(
-                fontSize: 10,
-                color: Colors.grey.shade600,
-              ),
-            ),
-          ],
+      );
+      return;
+    }
+
+    // Otherwise, fetch the expert's full profile directly by id — the
+    // exact same endpoint used by the Find Expert flow — so this
+    // always lands on real, live data instead of a static preview.
+    setState(() => _loadingExpertProfile = true);
+
+    final result = await ExpertService().getExpert(int.parse(widget.consult.expertId));
+
+    if (!mounted) return;
+    setState(() => _loadingExpertProfile = false);
+
+    if (result['success'] == true) {
+      final expertItem = ModelConverter.userToExpertItem(result['expert']);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => UserInformasiAhliScreen(expert: expertItem),
         ),
-      ),
-    );
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Failed to load expert profile')),
+      );
+    }
   }
 
   void showRatingDialog(int consultationId, String expertName) {
@@ -865,7 +564,7 @@ class UserChatScreenState extends State<UserChatScreen> {
             ),
           ),
           GestureDetector(
-            onTap: () => showExpertProfile(context),
+            onTap: _loadingExpertProfile ? null : () => goToExpertProfile(context),
             child: Container(
               padding: const EdgeInsets.symmetric(
                 horizontal: 14,
@@ -875,14 +574,23 @@ class UserChatScreenState extends State<UserChatScreen> {
                 color: kChatMain,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Text(
-                'View Profile',
-                style: GoogleFonts.outfit(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
+              child: _loadingExpertProfile
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
+                      ),
+                    )
+                  : Text(
+                      'View Profile',
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
             ),
           ),
         ],

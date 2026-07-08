@@ -205,6 +205,7 @@ class ModelConverter {
 
     return ConsultItem(
       id: consultation.id.toString(),
+      expertId: consultation.expertId.toString(),
       expertName: expertName,
       specialty: specialty,
       lastMessage: lastMsg,

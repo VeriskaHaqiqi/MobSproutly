@@ -402,6 +402,7 @@ class UserPembayaranScreenState extends State<UserPembayaranScreen> {
                   // Build a dummy ConsultItem from the expert
                   final consult = ConsultItem(
                     id: widget.expert.id,
+                    expertId: widget.expert.id,
                     expertName: widget.expert.name,
                     specialty: widget.expert.specialties.first,
                     lastMessage: 'Session started',

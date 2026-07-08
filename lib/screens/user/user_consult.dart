@@ -20,6 +20,7 @@ const Color kConsultScaffold = Color(0xFFF0F4F3);
 // ─── Consultation Model ───────────────────────────────────────────────────────
 class ConsultItem {
   final String id;
+  final String expertId;
   final String expertName;
   final String specialty;
   final String lastMessage;
@@ -32,6 +33,7 @@ class ConsultItem {
 
   const ConsultItem({
     required this.id,
+    required this.expertId,
     required this.expertName,
     required this.specialty,
     required this.lastMessage,
