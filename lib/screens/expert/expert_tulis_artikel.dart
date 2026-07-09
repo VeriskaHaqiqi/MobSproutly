@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,6 +9,7 @@ import '../../providers/article_provider.dart';
 import '../../models/article_model.dart';
 //import 'expert_artikel.dart';
 import '../../utils/image_helper.dart';
+import '../../utils/article_content_parser.dart';
 
 const Color kTulisMain = Color(0xFF5DCFCF);
 const Color kTulisTeal = Color(0xFF76EAD0);
@@ -438,10 +438,20 @@ class ExpertTulisArtikelPageState extends State<ExpertTulisArtikelPage> {
     });
     if (titleErr != null) return;
 
+    setState(() => isUploading = true);
+    final articleProvider = Provider.of<ArticleProvider>(context, listen: false);
+
     final contentBuffer = StringBuffer();
     for (final s in sections) {
       if (s.type == SectionType.text && s.ctrl != null) {
         contentBuffer.write(s.ctrl!.text);
+      } else if (s.type == SectionType.image && s.imagePath != null) {
+        final path = await articleProvider.uploadContentImage(s.imagePath!);
+        if (path != null) {
+          contentBuffer.write('\n${ArticleContentParser.imageMarker(path)}\n');
+        }
+        // If the upload fails, that image is silently skipped so the
+        // rest of the article can still be posted.
       }
     }
     final content = contentBuffer.toString().trim();
@@ -454,11 +464,10 @@ class ExpertTulisArtikelPageState extends State<ExpertTulisArtikelPage> {
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ));
+      setState(() => isUploading = false);
       return;
     }
 
-    setState(() => isUploading = true);
-    final articleProvider = Provider.of<ArticleProvider>(context, listen: false);
     if (selectedCategoryId == null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Please select a category', style: GoogleFonts.outfit(fontSize: 13)),

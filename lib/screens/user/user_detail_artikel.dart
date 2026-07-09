@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/article_provider.dart';
 import '../../models/article_model.dart';
 import '../../utils/model_converter.dart';
+import '../../widgets/article_body.dart';
 import 'user_artikel.dart';
 import 'user_pencarian.dart';
 
@@ -164,11 +165,9 @@ class UserDetailArtikelScreenState extends State<UserDetailArtikelScreen> {
                   const SizedBox(height: 16),
 
                   // ── Article body ──
-                  Text(
-                    widget.article.content.isNotEmpty
-                        ? widget.article.content
-                        : 'No content available.',
-                    style: GoogleFonts.outfit(
+                  ArticleBody(
+                    content: widget.article.content,
+                    textStyle: GoogleFonts.outfit(
                       fontSize: 14,
                       color: Colors.black87,
                       height: 1.75,

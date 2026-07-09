@@ -174,6 +174,15 @@ class ArticleProvider extends ChangeNotifier {
     }
   }
 
+  // Upload one image to embed inside an article's body content
+  Future<String?> uploadContentImage(String imagePath) async {
+    final result = await _articleService.uploadContentImage(imagePath);
+    if (result['success'] == true) {
+      return result['path'] as String?;
+    }
+    return null;
+  }
+
   // Create article
   Future<bool> createArticle({
     required int categoryId,

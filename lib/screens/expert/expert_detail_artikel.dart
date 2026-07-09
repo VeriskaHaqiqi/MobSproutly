@@ -7,6 +7,7 @@ import '../../providers/article_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/model_converter.dart';
 import '../../utils/image_helper.dart';
+import '../../widgets/article_body.dart';
 const Color kExDetMain = Color(0xFF5DCFCF);
 const Color kExDetTeal = Color(0xFF76EAD0);
 const Color kExDetBlue = Color(0xFF76D7EA);
@@ -362,9 +363,9 @@ class ExpertDetailArtikelPageState extends State<ExpertDetailArtikelPage> {
                   const SizedBox(height: 16),
 
                   // Body text
-                  Text(
-                    getExpertArticleContent(widget.article),
-                    style: GoogleFonts.outfit(
+                  ArticleBody(
+                    content: getExpertArticleContent(widget.article),
+                    textStyle: GoogleFonts.outfit(
                         fontSize: 14, color: Colors.black87, height: 1.75),
                   ),
                   const SizedBox(height: 28),

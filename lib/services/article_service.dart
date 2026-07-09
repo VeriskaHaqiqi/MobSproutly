@@ -72,6 +72,29 @@ class ArticleService {
     }
   }
 
+  // Upload a single image to embed inside an article's body content
+  // (separate from the cover image). Returns the storage path.
+  Future<Map<String, dynamic>> uploadContentImage(String imagePath) async {
+    try {
+      final formData = FormData.fromMap({
+        'image': await FileHelper.createMultipartFile(
+          imagePath,
+          filename: imagePath.split(RegExp(r'[/\\]')).last,
+        ),
+      });
+
+      final response = await _dio.post('/articles/upload-image', data: formData);
+
+      return {
+        'success': true,
+        'path': response.data['path'],
+      };
+    } on DioException catch (e) {
+      final msg = e.getErrorMessage('Failed to upload image');
+      return {'success': false, 'message': msg};
+    }
+  }
+
   // Create article (Expert only)
   Future<Map<String, dynamic>> createArticle({
     required int categoryId,

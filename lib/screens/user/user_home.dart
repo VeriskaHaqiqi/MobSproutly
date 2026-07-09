@@ -142,7 +142,7 @@ class _HomeUserScreenState extends State<HomeUserScreen> {
               ),
               const SizedBox(height: 2),
               Text(
-                user?.name ?? 'User',   // <-- GANTI 'Sarah Johnson' DENGAN INI
+                user?.name ?? 'User',   // 
                 style: GoogleFonts.inter(
                   fontSize: 22,
                   color: Colors.white,
