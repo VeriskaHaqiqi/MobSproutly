@@ -30,6 +30,7 @@ class ConsultItem {
   final bool isRead;
   final bool isActive;
   final List<String> topics; // keyword untuk search
+  final int sessionDurationMinutes;
 
   const ConsultItem({
     required this.id,
@@ -43,6 +44,7 @@ class ConsultItem {
     this.isRead = true,
     this.isActive = true,
     this.topics = const [],
+    this.sessionDurationMinutes = 30,
   });
 }
 

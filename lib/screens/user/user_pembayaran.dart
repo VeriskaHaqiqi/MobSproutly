@@ -412,6 +412,7 @@ class UserPembayaranScreenState extends State<UserPembayaranScreen> {
                     isRead: true,
                     isActive: true,
                     topics: widget.expert.topics,
+                    sessionDurationMinutes: widget.expert.sessionDurationMinutes,
                   );
                   Navigator.pushAndRemoveUntil(
                     context,

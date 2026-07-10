@@ -637,7 +637,7 @@ class UserChatScreenState extends State<UserChatScreen> {
               ),
               const Spacer(),
               Text(
-                '45-minute consultation',
+                '${chatProvider.consultation?.duration ?? widget.consult.sessionDurationMinutes}-minute consultation',
                 style: GoogleFonts.outfit(
                   fontSize: 12,
                   color: Colors.black54,

@@ -34,6 +34,7 @@ class ExpertItem {
   final int totalConsultations;
   final String avgResponse;
   final List<ReviewItem> reviews;
+  final int sessionDurationMinutes;
 
   const ExpertItem({
     required this.id,
@@ -52,6 +53,7 @@ class ExpertItem {
     required this.totalConsultations,
     required this.avgResponse,
     required this.reviews,
+    this.sessionDurationMinutes = 30,
   });
 }
 

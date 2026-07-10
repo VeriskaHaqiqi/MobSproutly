@@ -332,7 +332,7 @@ class UserChatLockedScreenState extends State<UserChatLockedScreen> {
                               fontWeight: FontWeight.w600,
                               color: Colors.black87)),
                       const SizedBox(height: 4),
-                      Text('45-minute consultation',
+                      Text('${widget.expert.sessionDurationMinutes}-minute consultation',
                           style: GoogleFonts.outfit(
                               fontSize: 11, color: Colors.grey.shade500)),
                     ],

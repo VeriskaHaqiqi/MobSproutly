@@ -162,6 +162,7 @@ class ModelConverter {
       totalConsultations: profile?.totalConsultations ?? 0,
       avgResponse: '5 min',
       reviews: [], // Can load dynamically if ratings are expanded
+      sessionDurationMinutes: profile?.sessionDuration ?? 30,
     );
   }
 
@@ -215,6 +216,7 @@ class ModelConverter {
       isRead: true,
       isActive: consultation.status == 'active',
       topics: topics,
+      sessionDurationMinutes: consultation.duration ?? expertUser?.expertProfile?.sessionDuration ?? 30,
     );
   }
 

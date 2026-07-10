@@ -488,6 +488,7 @@ class ExpertChatPageState extends State<ExpertChatPage> {
 
   // ── Session Banner ────────────────────────────────────────────────────────
   Widget _buildSessionBanner() {
+    final duration = Provider.of<ChatProvider>(context).consultation?.duration ?? 30;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -513,7 +514,7 @@ class ExpertChatPageState extends State<ExpertChatPage> {
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: Colors.black87)),
-                Text('30-minute consultation',
+                Text('$duration-minute consultation',
                     style: GoogleFonts.outfit(
                         fontSize: 11, color: Colors.black54)),
               ],
