@@ -35,6 +35,12 @@ class _UserInformasiAhliScreenState extends State<UserInformasiAhliScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<RatingProvider>(context, listen: false)
           .fetchPublicRatings(int.parse(expert.id), refresh: true);
+      // Refresh so the "Chat with Expert" button below always routes
+      // based on this consultation's *current* status (e.g. so a
+      // consultation the expert just rejected isn't mistaken for one
+      // that's still waiting on payment).
+      Provider.of<ConsultationProvider>(context, listen: false)
+          .fetchUserConsultations(refresh: true);
     });
   }
 
@@ -585,8 +591,14 @@ class _UserInformasiAhliScreenState extends State<UserInformasiAhliScreen> {
       child: SafeArea(
         top: false,
         child: GestureDetector(
-          onTap: () {
+          onTap: () async {
             final provider = Provider.of<ConsultationProvider>(context, listen: false);
+            // Refresh right before deciding where to go, in case the
+            // expert rejected/updated something while this screen was
+            // sitting open.
+            await provider.fetchUserConsultations(refresh: true);
+            if (!context.mounted) return;
+
             final existing = provider.userConsultations.where(
               (c) => c.expert?.id.toString() == expert.id
             ).toList();
@@ -603,7 +615,7 @@ class _UserInformasiAhliScreenState extends State<UserInformasiAhliScreen> {
                     builder: (ctx) => UserChatScreen(consult: ModelConverter.consultationToConsultItem(c)),
                   ),
                 );
-              } else if (c.status == 'waiting_payment' || c.status == 'waiting_verification' || c.status == 'rejected') {
+              } else if (c.status == 'waiting_payment' || c.status == 'waiting_verification') {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -611,6 +623,9 @@ class _UserInformasiAhliScreenState extends State<UserInformasiAhliScreen> {
                   ),
                 );
               } else {
+                // 'rejected', 'completed', or any other terminal status:
+                // that old consultation is done for, so let the user
+                // start a brand new one instead of getting stuck on it.
                 Navigator.push(
                   context,
                   MaterialPageRoute(

@@ -31,6 +31,12 @@ void main() {
   runApp(const SproutlyApp());
 }
 
+// Lets screens react when they become visible again after another screen
+// on top of them is popped (e.g. coming back from the payment screen to
+// the consultations list) -- used to refresh data that may have changed
+// elsewhere in the meantime, instead of only fetching once in initState.
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+
 class SproutlyApp extends StatelessWidget {
   const SproutlyApp({super.key});
 
@@ -48,6 +54,7 @@ class SproutlyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Sproutly',
         debugShowCheckedModeBanner: false,
+        navigatorObservers: [routeObserver],
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
             seedColor: const Color(0xFF76D7EA),

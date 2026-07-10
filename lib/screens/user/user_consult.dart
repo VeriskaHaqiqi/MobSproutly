@@ -7,9 +7,11 @@ import 'user_home.dart';
 import 'user_artikel.dart';
 import 'user_pencarian.dart';
 import 'user_chat.dart';
+import 'user_chat_locked.dart';
 import 'user_pembayaran.dart';
 import 'user_riwayat_consult.dart';
 import 'user_setting.dart';
+import '../../main.dart';
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 const Color kConsultTeal = Color(0xFF76EAD0);
@@ -57,7 +59,7 @@ class UserConsultScreen extends StatefulWidget {
   State<UserConsultScreen> createState() => _UserConsultScreenState();
 }
 
-class _UserConsultScreenState extends State<UserConsultScreen> {
+class _UserConsultScreenState extends State<UserConsultScreen> with RouteAware {
   int _navIndex = 2;
   bool _showActive = true;
   final TextEditingController _searchCtrl = TextEditingController();
@@ -75,10 +77,27 @@ class _UserConsultScreenState extends State<UserConsultScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _searchCtrl.removeListener(_onSearch);
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  // Called when the user comes back to this screen after popping a
+  // screen pushed on top of it (e.g. returning from the payment page).
+  // Without this, the list would keep showing whatever status it had
+  // the last time this screen was first built -- including a
+  // consultation the expert has since rejected in the meantime.
+  @override
+  void didPopNext() {
+    Provider.of<ConsultationProvider>(context, listen: false).fetchUserConsultations(refresh: true);
   }
 
   void _onSearch() {
@@ -404,13 +423,25 @@ class _UserConsultScreenState extends State<UserConsultScreen> {
         final provider = Provider.of<ConsultationProvider>(context, listen: false);
         final c = provider.userConsultations.firstWhere((item) => item.id.toString() == consult.id);
 
-        if (c.status == 'waiting_payment' || c.status == 'rejected' || c.status == 'waiting_verification') {
+        if (c.status == 'waiting_payment' || c.status == 'waiting_verification') {
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => UserPembayaranScreen(
                 expert: ModelConverter.userToExpertItem(c.expert!),
                 consultationId: c.id,
+              ),
+            ),
+          );
+        } else if (c.status == 'rejected') {
+          // That old consultation is a dead end (payment was rejected,
+          // no chat ever happened) -- let the user start a fresh one
+          // with the same expert instead of re-opening it.
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => UserChatLockedScreen(
+                expert: ModelConverter.userToExpertItem(c.expert!),
               ),
             ),
           );
